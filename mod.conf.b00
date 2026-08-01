@@ -1,0 +1,6 @@
+name = mod_mcl_signs
+title = Standalone MCL Signs
+description = A standalone signs mod converted from Mineclonia.
+author = testersakage
+depends = 
+optional_depends = default, mcl_core
