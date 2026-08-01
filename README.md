@@ -1,6 +1,6 @@
 # 独立・データ駆動型 MCL 看板MOD (`mod_mcl_signs`)
 
-- [English Documentation (README_en.md)](./README_en.md)
+- [English Documentation (README.en.md)](./README.en.md)
 - [ORIGINAL REAMDE.md (README.upstream.md)](./README.upstream.md)
 
 **Luanti**（旧Minetest）向けの、単体で動作するデータ駆動型の看板MODです。**Mineclonia** の優れた看板メカニズムをベースに抽出し、複数のゲーム環境へ柔軟に対応できるように大幅な拡張を施しています。
