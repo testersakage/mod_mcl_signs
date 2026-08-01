@@ -28,7 +28,7 @@ All dependencies on Mineclonia's core APIs (`mcl_core`, `mcl_worlds`, etc.) have
 Depending on your running game, the configuration will fall back or switch between item profiles:
 
 - **Minetest Game (`minetest.json`)**: Streamlined into standard **Wood** and **Iron** using vanilla resources (`default:wood`, `default:steel_ingot`).
-- **VoxeLibre(MineClone2) (`mineclone2.json`)**: Expands into **12 authentic types** (Oak, Spruce, Birch, Jungle, Acacia, Dark Oak, Mangrove, Cherry, Pale Oak, Bamboo, Crimson, Warped) using accurate game-specific nodes and craft recipes.
+- **VoxeLibre(MineClone2) (`mineclone2.json`)**: Expands into **11 authentic types** (Oak, Spruce, Birch, Jungle, Acacia, Dark Oak, Mangrove, Cherry, Bamboo, Crimson, Warped) using accurate game-specific nodes and craft recipes.
 
 ## 📂 Folder Structure
 
