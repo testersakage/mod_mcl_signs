@@ -55,6 +55,18 @@ mod_mcl_signs/
 
 Since this mod is derived from Mineclonia/VoxeLibre, it inherits the same open-source licenses:
 
-- **Source Code**: GPLv3 or later (see the original authors in the source files).
-- **Media (Textures/Models)**: CC BY-SA 4.0 or compatible open licenses.
-- **AI-generated**: This package contains AI-generated assets or code
+**Code:** MIT
+* `utf8.lua` is from `modlib`, by Lars Mueller alias LMD or appguru(eu) [(source)](https://github.com/appgurueu/modlib/blob/master/utf8.lua)
+* See `LICENSE` file for details
+
+**Font:** CC0
+* Originally by PilzAdam (WTFPL)
+* Modified and massively extended by rudzik8
+* Can be found in the `/textures` sub-directory of game root, prefixed with `_`
+* See <https://creativecommons.org/publicdomain/zero/1.0/> for details
+
+**Models:** GPLv3
+* by 22i: <https://github.com/22i/amc>
+* See <https://www.gnu.org/licenses/gpl-3.0.html> for details
+
+**AI-generated**: This package contains AI-generated assets or code

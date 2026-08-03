@@ -55,6 +55,18 @@ mod_mcl_signs/
 
 このMODはMineclonia / VoxeLibreの成果物をベースにしているため、元のオープンソースライセンスを継承します：
 
-- **ソースコード**: GPLv3 またはそれ以降（元の製作者の著作権表示はソースファイル内に維持されています）。
-- **メディア (テクスチャ/モデル)**: CC BY-SA 4.0 または互換性のあるオープンライセンス。
-- **AI生成**:このパッケージにはAI生成のアセットまたはコードが含まれています
+**Code:** MIT
+* `utf8.lua` is from `modlib`, by Lars Mueller alias LMD or appguru(eu) [(source)](https://github.com/appgurueu/modlib/blob/master/utf8.lua)
+* See `LICENSE` file for details
+
+**Font:** CC0
+* Originally by PilzAdam (WTFPL)
+* Modified and massively extended by rudzik8
+* Can be found in the `/textures` sub-directory of game root, prefixed with `_`
+* See <https://creativecommons.org/publicdomain/zero/1.0/> for details
+
+**Models:** GPLv3
+* by 22i: <https://github.com/22i/amc>
+* See <https://www.gnu.org/licenses/gpl-3.0.html> for details
+
+**AI生成**:このパッケージにはAI生成のアセットまたはコードが含まれています
