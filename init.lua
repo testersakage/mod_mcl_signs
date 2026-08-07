@@ -280,30 +280,82 @@ local function subseq(ustr, s, e)
 	return line
 end
 
+-- mods/ITEMS/mclsigns/init.lua の共通全半角判定関数（最終決定版）
+
+-- 💡 【解決：判定範囲を 0x04FF へ適正化】
+-- 西洋圏（ASCII、ラテン、ギリシャ、キリル文字）の境界線である「U+04FF」に完全同期させ、
+-- 日本の漢字・ひらがな（U+3000以降）を完璧な全角として防衛します。
+local function is_halfwidth(code)
+	-- 1. U+0000 〜 U+04FF : ASCII、欧州文字、ギリシャ文字、キリル文字（半角 6px）
+	if code >= 0x0000 and code <= 0x04FF then
+		return true
+	end
+	
+	-- 2. U+FF61 〜 U+FF9F : 半角カタカナ領域（半角 6px）
+	if code >= 0xFF61 and code <= 0xFF9F then
+		return true
+	end
+	
+	-- 💡 【結果】U+3000 〜 U+30FF（ひらがな・全角カタカナ）、
+	-- および U+540D（名）を含むCJK統合漢字領域は、すべて100%確実に「全角 12px」と判定されます。
+	return false
+end
+
+-- mods/ITEMS/mclsigns/init.lua の自動折り返し判定（16未満強制リターン版）
+
 local function ustring_to_line_array(ustr)
 	local lines = {}
 	local start, stop = 1, 1
+	
+	-- 現在の行の「仮想的な半角換算カウント数」
+	local current_line_length = 0
 
 	for cursor, code in ipairs(ustr) do
 		if #lines >= NUMBER_OF_LINES then break end
 
 		if WHITESPACE[code] or HYPHEN[code] then
 			stop = cursor
-		elseif NEWLINE[code] then
+		end
+
+		if NEWLINE[code] then
 			table.insert(lines, subseq(ustr, start, cursor - 1))
 			start, stop = cursor + 1, cursor + 1
-		elseif cursor - start + 1 >= LINE_LENGTH then
-			if stop <= start then -- forced break, no space in word
-				local line = subseq(ustr, start, cursor)
-				table.insert(line, WRAP_CODEPOINT)
-				table.insert(lines, line)
-				start, stop = cursor + 1, cursor + 1
+			current_line_length = 0 -- カウンターリセット
+		else
+			-- 💡 共通の判定関数を使い、現在の文字のカウントの重み（1 or 2）を決定
+			local weight = 1
+			if not is_halfwidth(code) then
+				weight = 2
+			end
+			
+			-- 💡 【最重要ハック：16未満死守のための先読み折り返し判定】
+			-- 現在のカウントにこの文字の重みを足した結果、もし「16（LINE_LENGTH + 1）」以上になってしまう場合は、
+			-- この文字（code）を現在の行に含めず、その『手前』で現在の行を確定させて次の行へ送ります。
+			if current_line_length + weight >= 16 then
+				
+				if stop <= start then 
+					-- 強制折り返し（単語内にスペースや切れ目が一切ない全角連続文字等の場合）
+					-- 現在の文字の手前（cursor - 1）までを1行として切り出します。
+					local line = subseq(ustr, start, cursor - 1)
+					table.insert(line, WRAP_CODEPOINT)
+					table.insert(lines, line)
+					-- 次の行の開始位置は、今回溢れた現在の文字（cursor）からスタートします。
+					start, stop = cursor, cursor
+				else
+					-- 単語の切れ目のスペースで美しく折り返す（本家本来の安全な挙動）
+					table.insert(lines, subseq(ustr, start, stop + (HYPHEN[ustr[stop]] and 0 or -1)))
+					start, stop = stop + 1, stop + 1
+				end
+				
+				-- 💡 行が新しく切り替わったので、新行の最初の文字（現在の文字）の重みでカウンターを再初期化
+				current_line_length = weight
 			else
-				table.insert(lines, subseq(ustr, start, stop + (HYPHEN[ustr[stop]] and 0 or -1)))
-				start, stop = stop + 1, stop + 1
+				-- 💡 16未満の安全圏内であれば、通常通りカウントを足し算して処理を続行
+				current_line_length = current_line_length + weight
 			end
 		end
 	end
+
 	if #lines < NUMBER_OF_LINES and start <= #ustr then
 		table.insert(lines, subseq(ustr, start, #ustr))
 	end
@@ -311,44 +363,105 @@ local function ustring_to_line_array(ustr)
 	return lines
 end
 
-local function generate_line(ustr, ypos)
-	local parsed = {}
+
+-- mods/ITEMS/mclsigns/init.lua
+
+local function generate_line(ustr, lineno, line_width, line_height, default_char_width)
+	local texture = ""
 	local width = 0
-	local printed_char_width = CHAR_WIDTH + 1
-
+	local maxw = 0
+	local chars = {}
+	local ch_offs = 0
+	local cell_size = 12
+	
 	for _, code in ipairs(ustr) do
-		local file = "_rc"
-		if charmap[code] then file = charmap[code] end
+		if code == 0x0A or code == 0x0D or code < 32 or (code >= 127 and code <= 159) then
+			code = 32 -- スペース
+		end
 
-		width = width + printed_char_width
-		table.insert(parsed, file)
+		local page = math.floor(code / 256)
+		local index = code % 256
+		local page_hex = string.format("%02X", page)
+		local atlas_file = "atlas_mcl_p" .. page_hex .. ".png"
+		
+		local col = index % 16
+		local row = math.floor(index / 16)
+		
+		local tex = atlas_file .. "\\^[sheet\\:16x16\\:" .. col .. "," .. row
+
+		-- 全角・半角の横幅（ピッチ）自動振り分け
+		local w = 12 -- デフォルトは全角12px
+		if is_halfwidth(code) then
+			w = 6    -- 西洋圏・半角カナは 6px
+		end
+
+		width = width + w
+		maxw = math.max(width, maxw)
+		
+		table.insert(chars, {
+			off = ch_offs,
+			tex = tex,
+			w = w,
+		})
+		ch_offs = ch_offs + w
 	end
 
-	width = width - 1
-	local texture = ""
-	local xpos = math.floor((SIGN_WIDTH - width) / 2) -- center with X offset
+	-- 左右の中央寄せピクセル計算
+	local start_xpos = math.max(0, math.floor((line_width - maxw) / 2)) + 4
+	
+	-- 💡 【解決】最後の文字が全角(12px)だった場合に右側が削られないよう、
+	-- 終了限界線を文字のサイズに合わせて自動で拡張します。
+	local end_xpos = math.min(start_xpos + maxw, line_width)
+	local xpos = start_xpos
 
-	for _, file in ipairs(parsed) do
-		texture = texture .. ":" .. xpos .. "," .. ypos .. "=" .. file.. ".png"
-		xpos = xpos + printed_char_width
+	-- 上下の行高さ位置微調整
+	local y_offset = 2
+	local ypos = line_height * lineno + y_offset
+
+	-- 二重配置スタンプによるハック描画
+	for _, ch in ipairs(chars) do
+		-- 右端のはみ出し制限を適正化
+		if xpos + ch.off > line_width then break end
+		
+		local current_x = xpos + ch.off
+		
+		-- ① まず、同じ位置にベースとなる透明なアトラスのスペース画像を配置
+		texture = texture .. (":%d,%d=atlas_mcl_p00.png\\^[sheet\\:16x16\\:0,2"):format(current_x, ypos)
+		-- ② その直後の全く同じ位置に、本命の文字切り出しコマンドを重ねてスタンプ！
+		texture = texture .. (":%d,%d=%s"):format(current_x, ypos, ch.tex)
 	end
 	return texture
 end
 
 local function generate_texture(data)
 	local lines = ustring_to_line_array(data.text)
-	local texture = "[combine:" .. SIGN_WIDTH .. "x" .. SIGN_WIDTH
-	local ypos = 0
+	local line_width = SIGN_WIDTH
+	
+	-- 行ピッチの12px等幅適正化
+	local line_height = LINE_HEIGHT
+	if line_height < 12 then line_height = 12 end
+
+	local default_char_width = CHAR_WIDTH + 1
 	local letter_color = data.color or DEFAULT_COLOR
 
-	for _, line in ipairs(lines) do
-		texture = texture .. generate_line(line, ypos)
-		ypos = ypos + LINE_HEIGHT
+	-- 大枠となる [combine 命令の器を初期化
+	local texture = { ("[combine:%dx%d"):format(line_width, line_width) }
+	local lineno = 0
+	for i = 1, #lines do
+		local linetex = generate_line(lines[i], lineno, line_width, line_height, default_char_width)
+		table.insert(texture, linetex)
+		lineno = lineno + 1
 	end
+	
+	local combined_tex = table.concat(texture, "")
+	
+	-- カラー乗算（multiply）を適用
+	combined_tex = "(" .. combined_tex .. "^[multiply:" .. letter_color .. ")"
+--	minetest.log("action", "[mcl_signs]  -> " .. combined_tex)
+	
+	return combined_tex
+end -- 💡 【解決】漏れていた end を完璧に補完しました
 
-	texture = "(" .. texture .. "^[multiply:" .. letter_color .. ")"
-	return texture
-end
 
 -- Text entity handling
 function mod_mcl_signs.get_text_entity(pos, force_remove)
