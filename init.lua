@@ -52,6 +52,21 @@ end
 
 local signs_editable = core.settings:get_bool("mcl_signs_editable", false)
 
+-- =====================================================================
+-- 💡 minetest.conf / settingtypes.txt からの 3大設定値の安全なロード
+-- =====================================================================
+-- get_int を使わず、公式仕様の get と tonumber キャストを介すことで
+-- 設定が空であってもデフォルト値（atlas_mcl_p%02X.png、3、4）が100%確実に適用されます。
+
+local ATLAS_NAME_PATTERN = minetest.settings:get("mcl_signs_atlas_name_pattern") or "atlas_mcl_p%02X.png"
+local UAX11_WIDE         = minetest.settings:get_bool("mcl_signs_uax11_wide", false)
+
+local y_offset_setting   = minetest.settings:get("mcl_signs_y_offset")
+local GLOBAL_Y_OFFSET    = tonumber(y_offset_setting) or 3
+
+local x_offset_setting   = minetest.settings:get("mcl_signs_center_padding")
+local GLOBAL_X_OFFSET    = tonumber(x_offset_setting) or 4
+
 local SIGN_WIDTH = 115
 
 local LINE_LENGTH = 15
@@ -282,75 +297,55 @@ end
 
 -- mods/ITEMS/mclsigns/init.lua の共通全半角判定関数（最終決定版）
 
--- 💡 【解決：判定範囲を 0x04FF へ適正化】
--- 西洋圏（ASCII、ラテン、ギリシャ、キリル文字）の境界線である「U+04FF」に完全同期させ、
--- 日本の漢字・ひらがな（U+3000以降）を完璧な全角として防衛します。
+-- =====================================================================
+-- 💡 1. 共通全半角判定関数
+-- =====================================================================
 local function is_halfwidth(code)
-	-- 1. U+0000 〜 U+04FF : ASCII、欧州文字、ギリシャ文字、キリル文字（半角 6px）
-	if code >= 0x0000 and code <= 0x04FF then
-		return true
+	if UAX11_WIDE then
+		if code >= 0x0000 and code <= 0x007F then return true end
+	else
+		if code >= 0x0000 and code <= 0x04FF then return true end
 	end
-	
-	-- 2. U+FF61 〜 U+FF9F : 半角カタカナ領域（半角 6px）
-	if code >= 0xFF61 and code <= 0xFF9F then
-		return true
-	end
-	
-	-- 💡 【結果】U+3000 〜 U+30FF（ひらがな・全角カタカナ）、
-	-- および U+540D（名）を含むCJK統合漢字領域は、すべて100%確実に「全角 12px」と判定されます。
+	if code >= 0xFF61 and code <= 0xFF9F then return true end
 	return false
 end
 
+
 -- mods/ITEMS/mclsigns/init.lua の自動折り返し判定（16未満強制リターン版）
 
-local function ustring_to_line_array(ustr)
+-- =====================================================================
+-- 💡 2. 仮想カウント先読み型・自動折り返し（改行）判定関数
+-- =====================================================================
+function ustring_to_line_array(ustr)
 	local lines = {}
 	local start, stop = 1, 1
-	
-	-- 現在の行の「仮想的な半角換算カウント数」
 	local current_line_length = 0
 
 	for cursor, code in ipairs(ustr) do
 		if #lines >= NUMBER_OF_LINES then break end
-
-		if WHITESPACE[code] or HYPHEN[code] then
-			stop = cursor
-		end
+		if WHITESPACE[code] or HYPHEN[code] then stop = cursor end
 
 		if NEWLINE[code] then
 			table.insert(lines, subseq(ustr, start, cursor - 1))
 			start, stop = cursor + 1, cursor + 1
-			current_line_length = 0 -- カウンターリセット
+			current_line_length = 0
 		else
-			-- 💡 共通の判定関数を使い、現在の文字のカウントの重み（1 or 2）を決定
-			local weight = 1
-			if not is_halfwidth(code) then
-				weight = 2
-			end
+			-- 半角なら1カウント、全角なら2カウントとして加算
+			local weight = is_halfwidth(code) and 1 or 2
 			
-			-- 💡 【最重要ハック：16未満死守のための先読み折り返し判定】
-			-- 現在のカウントにこの文字の重みを足した結果、もし「16（LINE_LENGTH + 1）」以上になってしまう場合は、
-			-- この文字（code）を現在の行に含めず、その『手前』で現在の行を確定させて次の行へ送ります。
+			-- 16カウント（全角8文字分）に達する「手前」で確実に次行へ送る先読みガード
 			if current_line_length + weight >= 16 then
-				
 				if stop <= start then 
-					-- 強制折り返し（単語内にスペースや切れ目が一切ない全角連続文字等の場合）
-					-- 現在の文字の手前（cursor - 1）までを1行として切り出します。
 					local line = subseq(ustr, start, cursor - 1)
 					table.insert(line, WRAP_CODEPOINT)
 					table.insert(lines, line)
-					-- 次の行の開始位置は、今回溢れた現在の文字（cursor）からスタートします。
 					start, stop = cursor, cursor
 				else
-					-- 単語の切れ目のスペースで美しく折り返す（本家本来の安全な挙動）
 					table.insert(lines, subseq(ustr, start, stop + (HYPHEN[ustr[stop]] and 0 or -1)))
 					start, stop = stop + 1, stop + 1
 				end
-				
-				-- 💡 行が新しく切り替わったので、新行の最初の文字（現在の文字）の重みでカウンターを再初期化
 				current_line_length = weight
 			else
-				-- 💡 16未満の安全圏内であれば、通常通りカウントを足し算して処理を続行
 				current_line_length = current_line_length + weight
 			end
 		end
@@ -366,6 +361,9 @@ end
 
 -- mods/ITEMS/mclsigns/init.lua
 
+-- =====================================================================
+-- 💡 3. 純正エスケープ仕様・行テクスチャ生成関数（3大設定の完全反映）
+-- =====================================================================
 local function generate_line(ustr, lineno, line_width, line_height, default_char_width)
 	local texture = ""
 	local width = 0
@@ -373,67 +371,54 @@ local function generate_line(ustr, lineno, line_width, line_height, default_char
 	local chars = {}
 	local ch_offs = 0
 	local cell_size = 12
-	
+
 	for _, code in ipairs(ustr) do
 		if code == 0x0A or code == 0x0D or code < 32 or (code >= 127 and code <= 159) then
-			code = 32 -- スペース
+			code = 32
 		end
 
 		local page = math.floor(code / 256)
 		local index = code % 256
-		local page_hex = string.format("%02X", page)
-		local atlas_file = "atlas_mcl_p" .. page_hex .. ".png"
+--		local page_hex = string.format("%02X", page)
+		
+		-- 💡 【反映①：ATLAS_NAME_PATTERN をその場で動的解決】
+--		local atlas_file = string.format(ATLAS_NAME_PATTERN, page_hex)
+		local atlas_file = string.format(ATLAS_NAME_PATTERN, page)
 		
 		local col = index % 16
 		local row = math.floor(index / 16)
 		
 		local tex = atlas_file .. "\\^[sheet\\:16x16\\:" .. col .. "," .. row
 
-		-- 全角・半角の横幅（ピッチ）自動振り分け
-		local w = 12 -- デフォルトは全角12px
-		if is_halfwidth(code) then
-			w = 6    -- 西洋圏・半角カナは 6px
-		end
+		-- 全角・半角の横幅（ピッチ）自動振り分け（6px / 12px）
+		local w = is_halfwidth(code) and 6 or 12
 
 		width = width + w
 		maxw = math.max(width, maxw)
 		
-		table.insert(chars, {
-			off = ch_offs,
-			tex = tex,
-			w = w,
-		})
+		table.insert(chars, { off = ch_offs, tex = tex, w = w })
 		ch_offs = ch_offs + w
 	end
 
-	-- 左右の中央寄せピクセル計算
-	local start_xpos = math.max(0, math.floor((line_width - maxw) / 2)) + 4
-	
-	-- 💡 【解決】最後の文字が全角(12px)だった場合に右側が削られないよう、
-	-- 終了限界線を文字のサイズに合わせて自動で拡張します。
+	-- 💡 【反映②：GLOBAL_X_OFFSET（一律 +4）による、左右の中央寄せ微調整】
+	local start_xpos = math.max(0, math.floor((line_width - maxw) / 2)) + GLOBAL_X_OFFSET
 	local end_xpos = math.min(start_xpos + maxw, line_width)
 	local xpos = start_xpos
 
-	-- 上下の行高さ位置微調整
-	local y_offset = 2
-	local ypos = line_height * lineno + y_offset
+	-- 💡 【反映③：GLOBAL_Y_OFFSET（一律 +3）による、上下の行高さ微調整】
+	local ypos = line_height * lineno + GLOBAL_Y_OFFSET
 
-	-- 二重配置スタンプによるハック描画
+	-- 二重配置スタンプによるハック描画（C++パーサー完全適合仕様）
 	for _, ch in ipairs(chars) do
-		-- 右端のはみ出し制限を適正化
 		if xpos + ch.off > line_width then break end
-		
 		local current_x = xpos + ch.off
-		
-		-- ① まず、同じ位置にベースとなる透明なアトラスのスペース画像を配置
 		texture = texture .. (":%d,%d=atlas_mcl_p00.png\\^[sheet\\:16x16\\:0,2"):format(current_x, ypos)
-		-- ② その直後の全く同じ位置に、本命の文字切り出しコマンドを重ねてスタンプ！
 		texture = texture .. (":%d,%d=%s"):format(current_x, ypos, ch.tex)
 	end
 	return texture
 end
 
-local function generate_texture(data)
+function generate_texture(data)
 	local lines = ustring_to_line_array(data.text)
 	local line_width = SIGN_WIDTH
 	
@@ -461,7 +446,6 @@ local function generate_texture(data)
 	
 	return combined_tex
 end -- 💡 【解決】漏れていた end を完璧に補完しました
-
 
 -- Text entity handling
 function mod_mcl_signs.get_text_entity(pos, force_remove)

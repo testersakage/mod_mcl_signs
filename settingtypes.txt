@@ -1,0 +1,26 @@
+[mod_mcl_signs]
+#======= mcl_signs: Address Line Cache Settings =======
+
+# 有効にすると、16文字単位の動的ラインキャッシュを使用してゲーム中のカクつきをシャットアウトします。
+#mod_mcl_signs_enable_line_cache (Enable Address Line Cache) bool true
+
+# 起動時に、アルファベットや数字が密集している主要な英語圏ラインを先行してメモリに常駐させます。
+#mod_mcl_signs_preload_english (Preload English Core Lines) bool true
+
+# 16文字単位の動的ラインキャッシュの最大保持数です。常駐するライン数の上限値。
+#mod_mcl_signs_max_line_cache (Max Address Line Cache) int 32 16 256
+
+# Atlas画像ファイルの名前規則です。大文字2桁の16進数ページコードが入る文字列パターン。
+mod_mcl_signs_atlas_name_pattern (Atlas Filename Pattern) string atlas_mcl_p%02X.png
+
+# 有効にすると、キリル文字やギリシャ文字を一律「全角(12px)」として扱い、無効なら「半角(6px)」として計算します。
+mod_mcl_signs_uax11_wide (UAX #11 Ambiguous is Wide) bool false
+
+# 看板の木枠に対する、文字の上下位置の微調整値です。ピクセル単位。
+mod_mcl_signs_y_offset (Global Text Vertical Offset) int 3 -16 16
+
+# すべての看板モデルに一律で適用する、左右中央寄せの微調整ピクセル値です。
+mod_mcl_signs_center_padding (Global Text Horizontal Padding) int 4 -32 32
+
+# 未実装 / 開発中：有効にすると、characters.tsvを参照して文字ごとの幅を自動調整し、本物のプロポーショナル描画を実現します。
+mod_mcl_signs_propotional (Proportional Font Mode) bool false

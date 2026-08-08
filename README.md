@@ -7,7 +7,9 @@
 
 MinecloniaのコアAPIへの依存関係は完全に排除されており、起動時に実行中のゲームを自動判別して最適な設定を読み込みます。
 
-## ✨ 主な機能
+文字画像生成にフォントアトラス方式を採用
+
+## 主な機能
 
 - **2種類の素材バリエーション**: Minetest Gameの仕様に合わせて、**「木」**と**「鉄」**の2種類にスマートに統合。
 - **複数ゲームへの自動適応**: JSONベースのデータ駆動アーキテクチャを採用。`core.get_game_info()` を用いて Game ID（`minetest`、`voxellibre` など）を自動検出し、対応する設定ファイルを動的にロードします。
@@ -16,42 +18,52 @@ MinecloniaのコアAPIへの依存関係は完全に排除されており、起�
 - **美しい文字レンダリング**: Mineclonia固有の高互換性UTF-8テキスト処理ライブラリ（`utf8.lua`）を内蔵し、文字のズレや文字化けを防止。
 - **他言語対応**: Luantiの標準翻訳システムに対応し、**日本語**と**英語**に完全対応。（プレイヤーが看板に書いた文字を除く）
 
-## 🛠️ 導入方法
+## 初期設定
+
+1. 同梱の mcl_sign_to_atlas.py を実行してAtlas画像を生成してください。
+
+## 導入方法
 
 1. このリポジトリをZIP形式でダウンロードするか、gitを使用してクローンします。
 2. 展開したフォルダを、Luantiの `mods/` ディレクトリに移動します。
 3. フォルダ名を正確に **`mod_mcl_signs`** に変更します。
 4. ワールドの設定画面からMODを**有効**にします。
 
-## 📦 各ゲームの構成とクラフト
+## 導入後の設定
+
+1. Luantiの［設定］->［コンテンツ：MOD］［Standalone MCL Signs］でAtlas画像の切り替えと表示位置の微調整が可能です。
+
+## 各ゲームの構成とクラフト
 
 起動したゲームの環境に応じて、インベントリの内容とレシピが自動で切り替わります：
 
 - **Minetest Game時 (`minetest.json`)**: 標準仕様に合わせ「木」と「鉄」の2種類に集約（`default:wood`, `default:steel_ingot` を使用）。
 - **VoxeLibre(MineClone2)時 (`mineclone2.json`)**: オークから歪んだ木まで**全11種類のバリエーション**へ拡張。元の古い看板のレシピを削除し、バグの直ったこの新看板へ完全に置き換えます。
 
-## 📂 フォルダ構成
+## フォルダ構成
 
 ```text
 mod_mcl_signs/
-├─ games/             # ゲームごとの設定JSONを格納 (minetest.json, mineclone2.json)
-├─ locale/            # 英語および日本語の翻訳ファイル (PO/POT)
-├─ models/            # オリジナルの3Dメッシュモデル (.obj)
-├─ textures/          # 木/鉄の看板用テクスチャおよびカスタムフォント画像
-├─ init.lua           # 独立化・最適化済みのメインスクリプト
-├─ mod.conf           # MOD設定ファイル (`default` MODに依存)
-├─ utf8.lua           # 内蔵された独自UTF-8テキスト処理ヘルパー
-├─ README.upstream.md # オリジナルのREADME.md
-├─ README.en.md       # このファイルの英語訳
-└─ README.md          # このファイル
+├─ games/               # ゲームごとの設定JSONを格納 (minetest.json, mineclone2.json)
+├─ locale/              # 英語および日本語の翻訳ファイル (PO/POT)
+├─ models/              # オリジナルの3Dメッシュモデル (.obj)
+├─ textures/            # 木/鉄の看板用テクスチャおよびカスタムフォント画像
+├─ init.lua             # 独立化・最適化済みのメインスクリプト
+├─ mod.conf             # MOD設定ファイル (`default` MODに依存)
+├─ settingtypes.txt     # 動作設定ファイル (Luantiの設定から変更可能)
+├─ utf8.lua             # 内蔵された独自UTF-8テキスト処理ヘルパー
+├─ mcl_sign_to_atlas.py # 文字画像からAtlas画像を生成するPythonスクリプト
+├─ README.upstream.md   # オリジナルのREADME.md
+├─ README.en.md         # このファイルの英語訳
+└─ README.md            # このファイル
 ```
 
-## 💻 動作環境
+## 動作環境
 
 - **最低環境**: **Luanti v5.4.0 以上** (`core.get_game_info()` による自動Game ID判定APIを使用しているため必須)。
 - **推奨環境**: **Luanti v5.15.2 以上** (エンジンの最適化および、重要なセキュリティ対策パッチが適用されているため推奨)。
 
-## ⚖️ ライセンス
+## ライセンス
 
 このMODはMineclonia / VoxeLibreの成果物をベースにしているため、元のオープンソースライセンスを継承します：
 
