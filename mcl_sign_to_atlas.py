@@ -117,8 +117,8 @@ def build_mcl_sign_atlas(csv_path, src_dir, out_dir):
                 else:
                     output_txt_lines.append(f"0x{code:04x}:empty\n")
 
-        # 3. 命名規則の統一: atlas_12px_p<2桁16進数>.png
-        file_base = f"atlas_12px_p{page_hex}"
+        # 3. 命名規則の統一: atlas_mcl_p<2桁16進数>.png
+        file_base = f"atlas_mcl_p{page_hex}"
         png_path = os.path.join(out_dir, file_base + ".png")
         txt_path = os.path.join(out_dir, file_base + ".png.txt")
         

@@ -22,6 +22,8 @@ This mod utilizes a font-atlas rendering method for text image generation.
 
 1. Execute the bundled `mcl_sign_to_atlas.py` script beforehand to generate your font-atlas texture image.
 
+Note: Characters beyond Unicode U+0500 are not included. You will need to convert and merge the fonts.
+
 ## 🚀 Installation
 
 1. Download this repository as a `.ZIP` file or clone it using git.
