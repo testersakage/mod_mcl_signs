@@ -18,12 +18,6 @@ MinecloniaのコアAPIへの依存関係は完全に排除されており、起�
 - **美しい文字レンダリング**: Mineclonia固有の高互換性UTF-8テキスト処理ライブラリ（`utf8.lua`）を内蔵し、文字のズレや文字化けを防止。
 - **他言語対応**: Luantiの標準翻訳システムに対応し、**日本語**と**英語**に完全対応。（プレイヤーが看板に書いた文字を除く）
 
-~~## 初期設定~~
-
-~~1. 同梱の mcl_sign_to_atlas.py を実行してAtlas画像を生成してください。~~
-
-~~※unicode U+0500 以降の文字は含まれていません。フォントを変換・結合する必要があります。~~
-
 ## 導入方法
 
 1. このリポジトリをZIP形式でダウンロードするか、gitを使用してクローンします。
@@ -31,9 +25,23 @@ MinecloniaのコアAPIへの依存関係は完全に排除されており、起�
 3. フォルダ名を正確に **`mod_mcl_signs`** に変更します。
 4. ワールドの設定画面からMODを**有効**にします。
 
+## アトラス画像の準備
+U+0500以降の文字を表示したい、あるいはmcl_signsのフォントを使いたくない場合はアトラス画像が必要です。
+対応しているフォントサイズは固定幅の12x12pxのみです。これはmcl_signsの標準フォントに合わせたサイズです。
+
+1. 拙作[fonttools](https://github.com/testersakage/fonttools)あるいは同等の変換プログラムを利用して 1文字12x12px 16x16文字で1ページのAtlas画像256枚(00~FF)を生成してください。
+2. 生成したファイル群を mod_mcl_signs/textures/ 下に配置してください。
+3. 以下を参照して**Atlas Filename Pattern**にファイル名規則を入力して「適用」ボタンを押してください。
+
 ## 導入後の設定
 
-1. Luantiの［設定］->［コンテンツ：MOD］［Standalone MCL Signs］でAtlas画像の切り替えと表示位置の微調整が可能です。
+Luantiの［設定］->［コンテンツ：MOD］［Standalone MCL Signs］でAtlas画像の切り替えと表示位置の微調整が可能です。
+- **Enable Legacy Compatibility Mode**: オリジナルのmcl_signsと同等の処理を行います。 U+04FF までの文字が texturs/ の文字画像で表示されます。
+- **Atlas Filename Pattern**: フォントアトラスのファイル名規則を記述します。 %02xおよび%02Xはページ番号に置換されます。
+- **UAX #11 Ambiguous is Wide**: ギリシャ・キリル文字の扱いを全角にします。
+- **Global Text Vertical Offset**: 看板全体の表示位置（縦方向）を微調整します。
+- **Global Text Horizontal Padding**: 看板全体の表示位置（横方向）を微調整します。
+- **Propotional Font Mode**: characters.tsvの文字幅を有効にします。（未実装）
 
 ## 各ゲームの構成とクラフト
 
@@ -46,19 +54,18 @@ MinecloniaのコアAPIへの依存関係は完全に排除されており、起�
 
 ```text
 mod_mcl_signs/
-├─ games/               # ゲームごとの設定JSONを格納 (minetest.json, mineclone2.json)
-├─ locale/              # 英語および日本語の翻訳ファイル (PO/POT)
-├─ models/              # オリジナルの3Dメッシュモデル (.obj)
-├─ textures/            # 木/鉄の看板用テクスチャおよびカスタムフォント画像
-├─ font_pipeline.lua    # フォントアトラスエンジン
-├─ init.lua             # 独立化・最適化済みのメインスクリプト
-├─ mod.conf             # MOD設定ファイル (`default` MODに依存)
-├─ settingtypes.txt     # 動作設定ファイル (Luantiの設定から変更可能)
-├─ utf8.lua             # 内蔵された独自UTF-8テキスト処理ヘルパー
-~~├─ mcl_sign_to_atlas.py # 文字画像からAtlas画像を生成するPythonスクリプト~~
-├─ README.upstream.md   # オリジナルのREADME.md
-├─ README.en.md         # このファイルの英語訳
-└─ README.md            # このファイル
+├─ games/              # ゲームごとの設定JSONを格納 (minetest.json, mineclone2.json)
+├─ locale/             # 英語および日本語の翻訳ファイル (PO/POT)
+├─ models/             # オリジナルの3Dメッシュモデル (.obj)
+├─ textures/           # 木/鉄の看板用テクスチャおよびカスタムフォント画像
+├─ font_pipeline.lua   # フォントアトラスエンジン
+├─ init.lua            # 独立化・最適化済みのメインスクリプト
+├─ mod.conf            # MOD設定ファイル (`default` MODに依存)
+├─ settingtypes.txt    # 動作設定ファイル (Luantiの設定から変更可能)
+├─ utf8.lua            # 内蔵された独自UTF-8テキスト処理ヘルパー
+├─ README.upstream.md  # オリジナルのREADME.md
+├─ README.en.md        # このファイルの英語訳
+└─ README.md           # このファイル
 ```
 
 ## 動作環境

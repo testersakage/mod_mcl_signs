@@ -18,12 +18,6 @@ This mod utilizes a font-atlas rendering method for text image generation.
 - **Beautiful Text Rendering**: Embeds a highly compatible internal UTF-8 text processing library (`utf8.lua`) originating from Mineclonia, preventing text clipping, misalignment, and character corruption.
 - **Advanced I18n**: Fully compatible with Luanti's native translation system, offering out-of-the-box support for both **English** and **Japanese** (excluding player-written text on signs).
 
-~~## ⚙️ Initial Configuration~~
-
-~~1. Execute the bundled `mcl_sign_to_atlas.py` script beforehand to generate your font-atlas texture image.~~
-
-~~Note: Characters beyond Unicode U+0500 are not included. You will need to convert and merge the fonts.~~
-
 ## 🚀 Installation
 
 1. Download this repository as a `.ZIP` file or clone it using git.
@@ -31,9 +25,31 @@ This mod utilizes a font-atlas rendering method for text image generation.
 3. Ensure the folder name is strictly renamed to **`mod_mcl_signs`**.
 4. Enable the mod in your world configuration menu.
 
-## 🔧 Post-Installation Setup
+## 🛠️ Preparing the Atlas Textures
+An atlas image profile is required if you want to display characters beyond U+0500 (such as Japanese) or if you prefer not to use the default mcl_signs font sheets.
+The supported font size is strictly locked to a monospaced 12x12px, which perfectly matches the scaling of the standard mcl_signs specifications.
 
-1. Navigate to Luanti's `Settings` -> `Content` -> `Mods` -> `Standalone mcl Signs`. You can switch atlas textures and finely adjust text display coordinates here.
+   1. Generate a complete set of 256 atlas page images (00 to FF) with a grid size of 16x16 characters (each character slot being 12x12px) using my [fonttools](https://github.com/testersakage/fonttools) repository or an equivalent conversion utility.
+   2. Place the generated image files directly inside the mod_mcl_signs/textures/ directory.
+   3. Refer to the configuration section below, enter your file naming convention into the Atlas Filename Pattern field, and click the "Apply" button.
+
+## 🔧 Post-Installation Setup
+Navigate to Luanti's Settings -> Content -> Mods -> Standalone mcl Signs to switch atlas profiles and finely adjust the textual display coordinates.
+
+
+- **Enable Legacy Compatibility Mode** (mod_mcl_signs_char_image_file):
+Mimics the exact rendering logic of the original mcl_signs. Characters up to U+04FF will be rendered using the discrete character images inside the textures/ root directory.
+- **Atlas Filename Pattern** (mod_mcl_signs_atlas_name_pattern):
+Specifies the file naming convention for your font atlases. The %02x or %02X wildcards will be dynamically replaced by the hex page numbers.
+- **UAX #11 Ambiguous is Wide** (mod_mcl_signs_uax11_wide):
+Treats Greek and Cyrillic ambiguous characters uniformly as full-width (12px) text layouts.
+- **Global Text Vertical Offset** (mod_mcl_signs_y_offset):
+Finely adjusts the vertical rendering offset (Y-axis) for all text on the signboards.
+- **Global Text Horizontal Padding** (mod_mcl_signs_center_padding):
+Finely adjusts the horizontal rendering padding (X-axis) for all text on the signboards.
+- **Proportional Font Mode** (mod_mcl_signs_propotional):
+Enables character-specific width adjustments mapped from characters.tsv. (Under Development / Unimplemented)
+
 
 ## 📦 Game Configurations & Crafting Recipes
 
@@ -55,7 +71,6 @@ mod_mcl_signs/
 ├─ mod.conf             # Mod configuration file (depends on `default` if available)
 ├─ settingtypes.txt     # In-game configurable setting schema
 ├─ utf8.lua             # Internal unique UTF-8 text helper
-~~├─ mcl_sign_to_atlas.py # Python script for converting font sheets into Atlas textures~~
 ├─ README.upstream.md   # The original base upstream README
 ├─ README.en.md         # This file
 └─ README.md            # Japanese documentation
