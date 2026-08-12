@@ -18,11 +18,11 @@ This mod utilizes a font-atlas rendering method for text image generation.
 - **Beautiful Text Rendering**: Embeds a highly compatible internal UTF-8 text processing library (`utf8.lua`) originating from Mineclonia, preventing text clipping, misalignment, and character corruption.
 - **Advanced I18n**: Fully compatible with Luanti's native translation system, offering out-of-the-box support for both **English** and **Japanese** (excluding player-written text on signs).
 
-## ⚙️ Initial Configuration
+~~## ⚙️ Initial Configuration~~
 
-1. Execute the bundled `mcl_sign_to_atlas.py` script beforehand to generate your font-atlas texture image.
+~~1. Execute the bundled `mcl_sign_to_atlas.py` script beforehand to generate your font-atlas texture image.~~
 
-Note: Characters beyond Unicode U+0500 are not included. You will need to convert and merge the fonts.
+~~Note: Characters beyond Unicode U+0500 are not included. You will need to convert and merge the fonts.~~
 
 ## 🚀 Installation
 
@@ -50,11 +50,12 @@ mod_mcl_signs/
 ├─ locale/              # English and Japanese translation files (PO/POT)
 ├─ models/              # Original 3D mesh assets (.obj)
 ├─ textures/            # Textures for wood/iron signs and custom font sheets
+├─ font_pipeline.lua    # Font Atlas Engine
 ├─ init.lua             # Refactored, high-performance main script
 ├─ mod.conf             # Mod configuration file (depends on `default` if available)
 ├─ settingtypes.txt     # In-game configurable setting schema
 ├─ utf8.lua             # Internal unique UTF-8 text helper
-├─ mcl_sign_to_atlas.py # Python script for converting font sheets into Atlas textures
+~~├─ mcl_sign_to_atlas.py # Python script for converting font sheets into Atlas textures~~
 ├─ README.upstream.md   # The original base upstream README
 ├─ README.en.md         # This file
 └─ README.md            # Japanese documentation

@@ -40,7 +40,8 @@ if type(utf8) ~= "table" then
 end
 
 -- Character map (see API.md for reference)
-local charmap = {}
+--local charmap = {}
+charmap = {}
 for line in io.lines(modpath .. DIR_DELIM .. "characters.tsv") do
 	local split = line:split("\t")
 	if #split == 3 then
@@ -50,22 +51,9 @@ for line in io.lines(modpath .. DIR_DELIM .. "characters.tsv") do
 	end
 end
 
+dofile(modpath .. "/font_pipeline.lua") -- 追加
+
 local signs_editable = core.settings:get_bool("mcl_signs_editable", false)
-
--- =====================================================================
--- 💡 minetest.conf / settingtypes.txt からの 3大設定値の安全なロード
--- =====================================================================
--- get_int を使わず、公式仕様の get と tonumber キャストを介すことで
--- 設定が空であってもデフォルト値（atlas_mcl_p%02X.png、3、4）が100%確実に適用されます。
-
-local ATLAS_NAME_PATTERN = minetest.settings:get("mcl_signs_atlas_name_pattern") or "atlas_mcl_p%02X.png"
-local UAX11_WIDE         = minetest.settings:get_bool("mcl_signs_uax11_wide", false)
-
-local y_offset_setting   = minetest.settings:get("mcl_signs_y_offset")
-local GLOBAL_Y_OFFSET    = tonumber(y_offset_setting) or 3
-
-local x_offset_setting   = minetest.settings:get("mcl_signs_center_padding")
-local GLOBAL_X_OFFSET    = tonumber(x_offset_setting) or 4
 
 local SIGN_WIDTH = 115
 
@@ -295,26 +283,8 @@ local function subseq(ustr, s, e)
 	return line
 end
 
--- mods/ITEMS/mclsigns/init.lua の共通全半角判定関数（最終決定版）
-
 -- =====================================================================
--- 💡 1. 共通全半角判定関数
--- =====================================================================
-local function is_halfwidth(code)
-	if UAX11_WIDE then
-		if code >= 0x0000 and code <= 0x007F then return true end
-	else
-		if code >= 0x0000 and code <= 0x04FF then return true end
-	end
-	if code >= 0xFF61 and code <= 0xFF9F then return true end
-	return false
-end
-
-
--- mods/ITEMS/mclsigns/init.lua の自動折り返し判定（16未満強制リターン版）
-
--- =====================================================================
--- 💡 2. 仮想カウント先読み型・自動折り返し（改行）判定関数
+-- 💡 2. 自動折り返し（改行）判定関数 (新モジュールの全半角ウェイトに結合)
 -- =====================================================================
 function ustring_to_line_array(ustr)
 	local lines = {}
@@ -330,10 +300,9 @@ function ustring_to_line_array(ustr)
 			start, stop = cursor + 1, cursor + 1
 			current_line_length = 0
 		else
-			-- 半角なら1カウント、全角なら2カウントとして加算
-			local weight = is_halfwidth(code) and 1 or 2
+			-- パイプライン側から、正確な全半角ウェイト（1 または 2）を取得して加算
+			local weight = mcl_font_pipeline.get_char_weight(code)
 			
-			-- 16カウント（全角8文字分）に達する「手前」で確実に次行へ送る先読みガード
 			if current_line_length + weight >= 16 then
 				if stop <= start then 
 					local line = subseq(ustr, start, cursor - 1)
@@ -358,11 +327,8 @@ function ustring_to_line_array(ustr)
 	return lines
 end
 
-
--- mods/ITEMS/mclsigns/init.lua
-
 -- =====================================================================
--- 💡 3. 純正エスケープ仕様・行テクスチャ生成関数（3大設定の完全反映）
+-- 💡 3. 行テクスチャ生成関数 (下地スタンプの設定連動修正版)
 -- =====================================================================
 local function generate_line(ustr, lineno, line_width, line_height, default_char_width)
 	local texture = ""
@@ -370,28 +336,13 @@ local function generate_line(ustr, lineno, line_width, line_height, default_char
 	local maxw = 0
 	local chars = {}
 	local ch_offs = 0
-	local cell_size = 12
 
 	for _, code in ipairs(ustr) do
 		if code == 0x0A or code == 0x0D or code < 32 or (code >= 127 and code <= 159) then
 			code = 32
 		end
 
-		local page = math.floor(code / 256)
-		local index = code % 256
---		local page_hex = string.format("%02X", page)
-		
-		-- 💡 【反映①：ATLAS_NAME_PATTERN をその場で動的解決】
---		local atlas_file = string.format(ATLAS_NAME_PATTERN, page_hex)
-		local atlas_file = string.format(ATLAS_NAME_PATTERN, page)
-		
-		local col = index % 16
-		local row = math.floor(index / 16)
-		
-		local tex = atlas_file .. "\\^[sheet\\:16x16\\:" .. col .. "," .. row
-
-		-- 全角・半角の横幅（ピッチ）自動振り分け（6px / 12px）
-		local w = is_halfwidth(code) and 6 or 12
+		local tex, w = mcl_font_pipeline.resolve_char(code, charmap)
 
 		width = width + w
 		maxw = math.max(width, maxw)
@@ -400,19 +351,23 @@ local function generate_line(ustr, lineno, line_width, line_height, default_char
 		ch_offs = ch_offs + w
 	end
 
-	-- 💡 【反映②：GLOBAL_X_OFFSET（一律 +4）による、左右の中央寄せ微調整】
-	local start_xpos = math.max(0, math.floor((line_width - maxw) / 2)) + GLOBAL_X_OFFSET
+	-- GLOBAL_X_OFFSET による中央寄せ調整
+	local start_xpos = math.max(0, math.floor((line_width - maxw) / 2)) + mcl_font_pipeline.GLOBAL_X_OFFSET
 	local end_xpos = math.min(start_xpos + maxw, line_width)
 	local xpos = start_xpos
 
-	-- 💡 【反映③：GLOBAL_Y_OFFSET（一律 +3）による、上下の行高さ微調整】
-	local ypos = line_height * lineno + GLOBAL_Y_OFFSET
+	-- GLOBAL_Y_OFFSET による行高さ調整
+	local ypos = line_height * lineno + mcl_font_pipeline.GLOBAL_Y_OFFSET
 
 	-- 二重配置スタンプによるハック描画（C++パーサー完全適合仕様）
 	for _, ch in ipairs(chars) do
 		if xpos + ch.off > line_width then break end
 		local current_x = xpos + ch.off
-		texture = texture .. (":%d,%d=atlas_mcl_p00.png\\^[sheet\\:16x16\\:0,2"):format(current_x, ypos)
+		
+		-- ★【バグ完全修正】固定のファイル名を撤去し、設定から動的に生成された BASE_ATLAS_FILE を適用！
+		texture = texture .. (":%d,%d=%s\\^[sheet\\:16x16\\:0,2"):format(current_x, ypos, mcl_font_pipeline.BASE_ATLAS_FILE)
+		
+		-- 本番の文字テクスチャスタンプ
 		texture = texture .. (":%d,%d=%s"):format(current_x, ypos, ch.tex)
 	end
 	return texture
@@ -445,7 +400,7 @@ function generate_texture(data)
 --	minetest.log("action", "[mcl_signs]  -> " .. combined_tex)
 	
 	return combined_tex
-end -- 💡 【解決】漏れていた end を完璧に補完しました
+end
 
 -- Text entity handling
 function mod_mcl_signs.get_text_entity(pos, force_remove)

@@ -18,11 +18,11 @@ MinecloniaのコアAPIへの依存関係は完全に排除されており、起�
 - **美しい文字レンダリング**: Mineclonia固有の高互換性UTF-8テキスト処理ライブラリ（`utf8.lua`）を内蔵し、文字のズレや文字化けを防止。
 - **他言語対応**: Luantiの標準翻訳システムに対応し、**日本語**と**英語**に完全対応。（プレイヤーが看板に書いた文字を除く）
 
-## 初期設定
+~~## 初期設定~~
 
-1. 同梱の mcl_sign_to_atlas.py を実行してAtlas画像を生成してください。
+~~1. 同梱の mcl_sign_to_atlas.py を実行してAtlas画像を生成してください。~~
 
-※unicode U+0500 以降の文字は含まれていません。フォントを変換・結合する必要があります。
+~~※unicode U+0500 以降の文字は含まれていません。フォントを変換・結合する必要があります。~~
 
 ## 導入方法
 
@@ -50,11 +50,12 @@ mod_mcl_signs/
 ├─ locale/              # 英語および日本語の翻訳ファイル (PO/POT)
 ├─ models/              # オリジナルの3Dメッシュモデル (.obj)
 ├─ textures/            # 木/鉄の看板用テクスチャおよびカスタムフォント画像
+├─ font_pipeline.lua    # フォントアトラスエンジン
 ├─ init.lua             # 独立化・最適化済みのメインスクリプト
 ├─ mod.conf             # MOD設定ファイル (`default` MODに依存)
 ├─ settingtypes.txt     # 動作設定ファイル (Luantiの設定から変更可能)
 ├─ utf8.lua             # 内蔵された独自UTF-8テキスト処理ヘルパー
-├─ mcl_sign_to_atlas.py # 文字画像からAtlas画像を生成するPythonスクリプト
+~~├─ mcl_sign_to_atlas.py # 文字画像からAtlas画像を生成するPythonスクリプト~~
 ├─ README.upstream.md   # オリジナルのREADME.md
 ├─ README.en.md         # このファイルの英語訳
 └─ README.md            # このファイル
