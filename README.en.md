@@ -29,7 +29,7 @@ This mod utilizes a font-atlas rendering method for text image generation.
 An atlas image profile is required if you want to display characters beyond U+0500 (such as Japanese) or if you prefer not to use the default `mcl_signs` font sheets.
 The supported font size is strictly locked to a monospaced **12x12px**, which perfectly matches the scaling of the standard `mcl_signs` specifications.
 
-1. Generate a complete set of 256 atlas page images (`00` to `FF`) with a grid size of **16x16 characters** (each character slot being **12x12px**) using my [fonttools](https://github.com) repository or an equivalent conversion utility.
+1. Generate a complete set of 256 atlas page images (`00` to `FF`) with a grid size of **16x16 characters** (each character slot being **12x12px**) using my [fonttools](https://github.com/testersakage/fonttools) repository or an equivalent conversion utility.
 2. Place the generated image files directly inside the `mod_mcl_signs/textures/` directory.
 3. Refer to the configuration section below, enter your file naming convention into the **Main Atlas Filename Pattern** field, and click the "Apply" button.
 4. To utilize the font fallback pipeline, generate an integration TSV file that lists all valid font characters inside your main atlas, and place it directly under the `mod_mcl_signs/` root directory.

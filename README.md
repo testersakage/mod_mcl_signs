@@ -29,7 +29,7 @@ MinecloniaのコアAPIへの依存関係は完全に排除されており、起�
 U+0500以降の文字を表示したい、あるいはmcl_signsのフォントを使いたくない場合はアトラス画像が必要です。
 対応しているフォントサイズは固定幅の12x12pxのみです。これはmcl_signsの標準フォントに合わせたサイズです。
 
-1. 拙作[fonttools](github.com/testersakage/fonttools)あるいは同等の変換プログラムを利用して 1文字12x12px 16x16文字で1ページのAtlas画像256枚(00~FF)を生成してください。
+1. 拙作[fonttools](https://github.com/testersakage/fonttools)あるいは同等の変換プログラムを利用して 1文字12x12px 16x16文字で1ページのAtlas画像256枚(00~FF)を生成してください。
 2. 生成したファイル群を mod_mcl_signs/textures/ 下に配置してください。
 3. 以下を参照して**Main Atlas Filename Pattern**にファイル名規則を入力して「適用」ボタンを押してください。
 4. フォールバックを利用する場合はメインアトラスの文字情報をリスト化したTSVファイルを mod_mcl_signs に配置してください。
