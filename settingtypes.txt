@@ -6,7 +6,25 @@
 mod_mcl_signs_char_image_file (Enable Legacy Compatibility Mode) bool true
 
 # Atlas画像ファイルの名前規則です。大文字2桁の16進数ページコードが入る文字列パターン。
-mod_mcl_signs_atlas_name_pattern (Atlas Filename Pattern) string atlas_mcl_p%02X.png
+#mod_mcl_signs_atlas_name_pattern (Atlas Filename Pattern) string atlas_mcl_p%02X.png
+
+# メインフォントアトラスのファイル名規則を記述します（例: PixelMplus等）。
+mod_mcl_signs_main_atlas_pattern (Main Atlas Filename Pattern) string unicode_main%02x.png
+
+# メインフォントに「実在する文字」を記録した統合TSVのファイル名を記述します。
+mod_mcl_signs_main_atlas_list (Main Atlas Registry TSV Name) string unicode_main.tsv
+
+# メインフォントに文字が無い（歯抜け）の時に自動で身代わりにするサブアトラスの規則を記述します。
+mod_mcl_signs_sub_atlas_pattern (Fallback Sub-Atlas Pattern) string unicode_fallback%02x.png
+
+# 1文字あたりの「幅（ピクセル数）」です（12x12pxの場合は12）。
+#mod_mcl_signs_char_width (Atlas Char Width) int 12
+
+# 1文字あたりの「高さ（ピクセル数）」です（12x12pxの場合は12）。
+#mod_mcl_signs_char_height (Atlas Char Height) int 12
+
+# Atlas画像ファイルの1ページあたりの「列数（横のグリッド数）」です。
+#mod_mcl_signs_columns (Atlas Columns) int 16
 
 # 有効: キリル文字やギリシャ文字を一律「全角(12px)」として計算します。
 # 無効: 「半角(6px)」として計算します。 (Default)

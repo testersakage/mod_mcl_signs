@@ -29,15 +29,19 @@ MinecloniaのコアAPIへの依存関係は完全に排除されており、起�
 U+0500以降の文字を表示したい、あるいはmcl_signsのフォントを使いたくない場合はアトラス画像が必要です。
 対応しているフォントサイズは固定幅の12x12pxのみです。これはmcl_signsの標準フォントに合わせたサイズです。
 
-1. 拙作[fonttools](https://github.com/testersakage/fonttools)あるいは同等の変換プログラムを利用して 1文字12x12px 16x16文字で1ページのAtlas画像256枚(00~FF)を生成してください。
+1. 拙作[fonttools](github.com/testersakage/fonttools)あるいは同等の変換プログラムを利用して 1文字12x12px 16x16文字で1ページのAtlas画像256枚(00~FF)を生成してください。
 2. 生成したファイル群を mod_mcl_signs/textures/ 下に配置してください。
-3. 以下を参照して**Atlas Filename Pattern**にファイル名規則を入力して「適用」ボタンを押してください。
+3. 以下を参照して**Main Atlas Filename Pattern**にファイル名規則を入力して「適用」ボタンを押してください。
+4. フォールバックを利用する場合はメインアトラスの文字情報をリスト化したTSVファイルを mod_mcl_signs に配置してください。
+5. **Main Atlas Registry TSV Name**と**Fallback Sub-Atlas Pattern**を設定して「適用」ボタンを押してください。
 
 ## 導入後の設定
 
 Luantiの［設定］->［コンテンツ：MOD］［Standalone MCL Signs］でAtlas画像の切り替えと表示位置の微調整が可能です。
 - **Enable Legacy Compatibility Mode**: オリジナルのmcl_signsと同等の処理を行います。 U+04FF までの文字が texturs/ の文字画像で表示されます。
-- **Atlas Filename Pattern**: フォントアトラスのファイル名規則を記述します。 %02xおよび%02Xはページ番号に置換されます。
+- **Main Atlas Filename Pattern**: メインフォントアトラスのファイル名規則を記述します。 %02xおよび%02Xはページ番号に置換されます。
+- **Main Atlas Registry TSV Name**: メインフォントに「実在する文字」を記録した統合TSVのファイル名を記述します。無指定および間違えた場合は、メインアトラスを参照します。
+- **Fallback Sub-Atlas Pattern**: サブフォントアトラスのファイル名規則を記述します。無指定および間違えた場合はTSVファイルの設定が無効になり、メインアトラスを参照します。
 - **UAX #11 Ambiguous is Wide**: ギリシャ・キリル文字の扱いを全角にします。
 - **Global Text Vertical Offset**: 看板全体の表示位置（縦方向）を微調整します。
 - **Global Text Horizontal Padding**: 看板全体の表示位置（横方向）を微調整します。
@@ -58,6 +62,7 @@ mod_mcl_signs/
 ├─ locale/             # 英語および日本語の翻訳ファイル (PO/POT)
 ├─ models/             # オリジナルの3Dメッシュモデル (.obj)
 ├─ textures/           # 木/鉄の看板用テクスチャおよびカスタムフォント画像
+├─ atlas_sample.tsv    # tsvファイルのサンプル
 ├─ font_pipeline.lua   # フォントアトラスエンジン
 ├─ init.lua            # 独立化・最適化済みのメインスクリプト
 ├─ mod.conf            # MOD設定ファイル (`default` MODに依存)

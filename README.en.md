@@ -26,30 +26,35 @@ This mod utilizes a font-atlas rendering method for text image generation.
 4. Enable the mod in your world configuration menu.
 
 ## 🛠️ Preparing the Atlas Textures
-An atlas image profile is required if you want to display characters beyond U+0500 (such as Japanese) or if you prefer not to use the default mcl_signs font sheets.
-The supported font size is strictly locked to a monospaced 12x12px, which perfectly matches the scaling of the standard mcl_signs specifications.
+An atlas image profile is required if you want to display characters beyond U+0500 (such as Japanese) or if you prefer not to use the default `mcl_signs` font sheets.
+The supported font size is strictly locked to a monospaced **12x12px**, which perfectly matches the scaling of the standard `mcl_signs` specifications.
 
-   1. Generate a complete set of 256 atlas page images (00 to FF) with a grid size of 16x16 characters (each character slot being 12x12px) using my [fonttools](https://github.com/testersakage/fonttools) repository or an equivalent conversion utility.
-   2. Place the generated image files directly inside the mod_mcl_signs/textures/ directory.
-   3. Refer to the configuration section below, enter your file naming convention into the Atlas Filename Pattern field, and click the "Apply" button.
+1. Generate a complete set of 256 atlas page images (`00` to `FF`) with a grid size of **16x16 characters** (each character slot being **12x12px**) using my [fonttools](https://github.com) repository or an equivalent conversion utility.
+2. Place the generated image files directly inside the `mod_mcl_signs/textures/` directory.
+3. Refer to the configuration section below, enter your file naming convention into the **Main Atlas Filename Pattern** field, and click the "Apply" button.
+4. To utilize the font fallback pipeline, generate an integration TSV file that lists all valid font characters inside your main atlas, and place it directly under the `mod_mcl_signs/` root directory.
+5. Configure the **Main Atlas Registry TSV Name** and **Fallback Sub-Atlas Pattern** fields, then click the "Apply" button.
 
 ## 🔧 Post-Installation Setup
-Navigate to Luanti's Settings -> Content -> Mods -> Standalone mcl Signs to switch atlas profiles and finely adjust the textual display coordinates.
 
+Navigate to Luanti's **Settings -> Content -> Mods -> Standalone mcl Signs** to switch atlas profiles and finely adjust the textual display coordinates.
 
-- **Enable Legacy Compatibility Mode** (mod_mcl_signs_char_image_file):
-Mimics the exact rendering logic of the original mcl_signs. Characters up to U+04FF will be rendered using the discrete character images inside the textures/ root directory.
-- **Atlas Filename Pattern** (mod_mcl_signs_atlas_name_pattern):
-Specifies the file naming convention for your font atlases. The %02x or %02X wildcards will be dynamically replaced by the hex page numbers.
-- **UAX #11 Ambiguous is Wide** (mod_mcl_signs_uax11_wide):
-Treats Greek and Cyrillic ambiguous characters uniformly as full-width (12px) text layouts.
-- **Global Text Vertical Offset** (mod_mcl_signs_y_offset):
-Finely adjusts the vertical rendering offset (Y-axis) for all text on the signboards.
-- **Global Text Horizontal Padding** (mod_mcl_signs_center_padding):
-Finely adjusts the horizontal rendering padding (X-axis) for all text on the signboards.
-- **Proportional Font Mode** (mod_mcl_signs_propotional):
-Enables character-specific width adjustments mapped from characters.tsv. (Under Development / Unimplemented)
-
+- **Enable Legacy Compatibility Mode (`mcl_signs_char_image_file`)**:
+  Mimics the exact rendering logic of the original `mcl_signs`. Characters up to `U+04FF` will be rendered using the discrete character images inside the `textures/` root directory.
+- **Main Atlas Filename Pattern (`mcl_signs_main_atlas_pattern`)**:
+  Specifies the file naming convention for your primary font atlases. The `%02x` or `%02X` wildcards will be dynamically replaced by the hex page numbers.
+- **Main Atlas Registry TSV Name (`mcl_signs_main_atlas_list`)**:
+  Specifies the filename of the integration TSV that registers all "existing characters" in your primary font. If this field is left blank or the file is missing, the system will automatically route all character queries strictly to the Main Atlas.
+- **Fallback Sub-Atlas Pattern (`mcl_signs_sub_atlas_pattern`)**:
+  Specifies the file naming convention for your secondary (fallback) font atlases. If this field is left blank or the specified files are missing, the TSV configurations will be ignored, and the system will fall back entirely to the Main Atlas.
+- **UAX #11 Ambiguous is Wide (`mcl_signs_uax11_wide`)**:
+  Treats Greek and Cyrillic ambiguous characters uniformly as full-width (12px) text layouts.
+- **Global Text Vertical Offset (`mcl_signs_y_offset`)**:
+  Finely adjusts the vertical rendering offset (Y-axis) for all text on the signboards.
+- **Global Text Horizontal Padding (`mcl_signs_center_padding`)**:
+  Finely adjusts the horizontal rendering padding (X-axis) for all text on the signboards.
+- **Proportional Font Mode (`mcl_signs_propotional`)**:
+  Enables character-specific width adjustments mapped from `characters.tsv`. *(Under Development / Unimplemented)*
 
 ## 📦 Game Configurations & Crafting Recipes
 
@@ -62,18 +67,19 @@ The recipes and inventory profiles adapt dynamically based on the launched game 
 
 ```text
 mod_mcl_signs/
-├─ games/               # Game-specific configuration JSONs (minetest.json, mineclone2.json)
-├─ locale/              # English and Japanese translation files (PO/POT)
-├─ models/              # Original 3D mesh assets (.obj)
-├─ textures/            # Textures for wood/iron signs and custom font sheets
-├─ font_pipeline.lua    # Font Atlas Engine
-├─ init.lua             # Refactored, high-performance main script
-├─ mod.conf             # Mod configuration file (depends on `default` if available)
-├─ settingtypes.txt     # In-game configurable setting schema
-├─ utf8.lua             # Internal unique UTF-8 text helper
-├─ README.upstream.md   # The original base upstream README
-├─ README.en.md         # This file
-└─ README.md            # Japanese documentation
+├─ games/              # Game-specific configuration JSONs (minetest.json, mineclone2.json)
+├─ locale/             # English and Japanese translation files (PO/POT)
+├─ models/             # Original 3D mesh assets (.obj)
+├─ textures/           # Textures for wood/iron signs and custom font sheets
+├─ atlas_sample.tsv    # Sample .tsv file
+├─ font_pipeline.lua   # Font Atlas Engine
+├─ init.lua            # Refactored, high-performance main script
+├─ mod.conf            # Mod configuration file (depends on `default` if available)
+├─ settingtypes.txt    # In-game configurable setting schema
+├─ utf8.lua            # Internal unique UTF-8 text helper
+├─ README.upstream.md  # The original base upstream README
+├─ README.en.md        # This file
+└─ README.md           # Japanese documentation
 ```
 
 ## 💻 Supported Environments
