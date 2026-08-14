@@ -56,12 +56,21 @@ Navigate to Luanti's **Settings -> Content -> Mods -> Standalone mcl Signs** to 
 - **Proportional Font Mode (`mcl_signs_propotional`)**:
   Enables character-specific width adjustments mapped from `characters.tsv`. *(Under Development / Unimplemented)*
 
-## 📦 Game Configurations & Crafting Recipes
+## Game Environment Adaptation & Crafting Recipes
 
-The recipes and inventory profiles adapt dynamically based on the launched game environment:
+This mod automatically detects the running game environment and dynamically adjusts the inventory registration and crafting recipes as follows:
 
-- **Minetest Game (`minetest.json`)**: Condensed into basic "Wood" and "Iron" recipes to align with standard criteria (utilizes `default:wood` and `default:steel_ingot`).
-- **VoxeLibre / MineClone2 (`mineclone2.json`)**: Expanded into **11 unique wood variations** from Oak to Warped. It purges the glitchy vanilla legacy sign recipes and safely overwrites them with this newly fixed standalone system.
+- **VoxeLibre / MineClone2 Context (`mineclone2.json`)**:
+  Expands the signboard availability into **11 unique wood variations** (from Oak to Warped). It automatically purges the legacy, bugged signboard recipes from the base game and completely overwrites them with this newly fixed, robust signboard system.
+- **Mineclonia Context (`mineclonia.json`)**:
+  To prevent item ID conflicts and double-registration with the base game's built-in nodes, this mod refrains from registering duplicate crafting recipes.
+- **Other Contexts & Minetest Game (`minetest.json`)**:
+  In accordance with standard specifications, the materials are streamlined into just 2 types: "Wood" and "Iron" (utilizing `default:wood` and `default:steel_ingot`).
+
+### 💡 Custom Expansion for Other Games
+If you wish to add custom sign variations or recipes for your own game environment, you can easily implement them by creating a new definition file, using the existing JSON files inside the `games/` directory as a reference template.
+
+If you are unsure of the exact `ItemID` (internal node names) required to configure your custom crafting recipes, please utilize [Recipe_Maker](https://github.com/testersakage/recipe_maker) to look them up.
 
 ## 📂 Folder Structure
 

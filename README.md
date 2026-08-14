@@ -47,12 +47,21 @@ Luantiの［設定］->［コンテンツ：MOD］［Standalone MCL Signs］でA
 - **Global Text Horizontal Padding**: 看板全体の表示位置（横方向）を微調整します。
 - **Propotional Font Mode**: characters.tsvの文字幅を有効にします。（未実装）
 
-## 各ゲームの構成とクラフト
+## 各ゲーム環境への適応とクラフトレシピ
 
-起動したゲームの環境に応じて、インベントリの内容とレシピが自動で切り替わります：
+起動したゲーム環境を自動で検知し、インベントリの内容とクラフトレシピが以下のように動的に切り替わります。
 
-- **Minetest Game時 (`minetest.json`)**: 標準仕様に合わせ「木」と「鉄」の2種類に集約（`default:wood`, `default:steel_ingot` を使用）。
-- **VoxeLibre(MineClone2)時 (`mineclone2.json`)**: オークから歪んだ木まで**全11種類のバリエーション**へ拡張。元の古い看板のレシピを削除し、バグの直ったこの新看板へ完全に置き換えます。
+- **VoxeLibre / MineClone2 環境時 (`mineclone2.json`)**: 
+  オークから歪んだ木まで、**全11種類のバリエーション**へ看板を拡張します。元の古い看板のレシピを自動で消去し、バグの修正されたこの新しい看板システムへと完全に置き換えます。
+- **Mineclonia 環境時 (`mineclonia.json`)**: 
+  ゲーム本体側との競合（二重登録）を防ぐため、本MOD側からはレシピの重複登録を行いません。
+- **上記以外の環境 ＆ Minetest Game 環境時 (`minetest.json`)**: 
+  標準の仕様に合わせ、「木」と「鉄」の2種類のみに素材を集約します（`default:wood`、`default:steel_ingot` を使用）。
+
+### 💡 独自ゲームへの対応と拡張方法
+お使いの環境に合わせて独自に看板の種類やレシピを追加したい場合は、`games/` フォルダ内にある各JSONファイルを参考にして、新しい定義ファイルを追加してください。
+
+クラフトレシピを構築する際、必要なアイテムの正確なItemID（内部ネーム）がわからない場合は、[Recipe_Maker](https://github.com/testersakage/recipe_maker) で調査してください。
 
 ## フォルダ構成
 

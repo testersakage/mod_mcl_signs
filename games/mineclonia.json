@@ -1,0 +1,16 @@
+{
+  "debug": "off",
+  "game_id": "mineclonia",
+  "game_title": "Mineclonia,
+  "game_ver": "2026-07-18",
+  "signs": [
+    {
+      "name": "wood",
+      "color": "#997252"
+    },
+    {
+      "name": "iron",
+      "color": "#f0f7f7"
+    }
+  ]
+}
