@@ -63,7 +63,7 @@ This mod automatically detects the running game environment and dynamically adju
 - **VoxeLibre / MineClone2 Context (`mineclone2.json`)**:
   Expands the signboard availability into **11 unique wood variations** (from Oak to Warped). It automatically purges the legacy, bugged signboard recipes from the base game and completely overwrites them with this newly fixed, robust signboard system.
 - **Mineclonia Context (`mineclonia.json`)**:
-  To prevent item ID conflicts and double-registration with the base game's built-in nodes, this mod refrains from registering duplicate crafting recipes.
+  To prevent any registration conflicts (dual-registration anomalies) with the core game engine, this mod skips duplicated craft recipe injections. However, all freshly placed and pre-existing vanilla signs will be completely and seamlessly overridden by this mod's high-definition Atlas rendering infrastructure.
 - **Other Contexts & Minetest Game (`minetest.json`)**:
   In accordance with standard specifications, the materials are streamlined into just 2 types: "Wood" and "Iron" (utilizing `default:wood` and `default:steel_ingot`).
 

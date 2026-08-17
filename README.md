@@ -54,7 +54,7 @@ Luantiの［設定］->［コンテンツ：MOD］［Standalone MCL Signs］でA
 - **VoxeLibre / MineClone2 環境時 (`mineclone2.json`)**: 
   オークから歪んだ木まで、**全11種類のバリエーション**へ看板を拡張します。元の古い看板のレシピを自動で消去し、バグの修正されたこの新しい看板システムへと完全に置き換えます。
 - **Mineclonia 環境時 (`mineclonia.json`)**: 
-  ゲーム本体側との競合（二重登録）を防ぐため、本MOD側からはレシピの重複登録を行いません。
+  ゲーム本体側との競合（二重登録）を防ぐため、本MOD側からはレシピの重複登録を行いませんが、新規及び設置済みの看板は本modの処理に置き換わります。
 - **上記以外の環境 ＆ Minetest Game 環境時 (`minetest.json`)**: 
   標準の仕様に合わせ、「木」と「鉄」の2種類のみに素材を集約します（`default:wood`、`default:steel_ingot` を使用）。
 

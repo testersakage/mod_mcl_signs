@@ -397,7 +397,7 @@ function generate_texture(data)
 	
 	-- カラー乗算（multiply）を適用
 	combined_tex = "(" .. combined_tex .. "^[multiply:" .. letter_color .. ")"
---	minetest.log("action", "[mcl_signs]  -> " .. combined_tex)
+--	minetest.log("action", "[mod_mcl_signs]  -> " .. combined_tex)
 	
 	return combined_tex
 end

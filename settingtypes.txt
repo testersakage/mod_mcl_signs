@@ -5,9 +5,6 @@
 # 無効: Font Atlasの文字画像を利用する
 mod_mcl_signs_char_image_file (Enable Legacy Compatibility Mode) bool true
 
-# Atlas画像ファイルの名前規則です。大文字2桁の16進数ページコードが入る文字列パターン。
-#mod_mcl_signs_atlas_name_pattern (Atlas Filename Pattern) string atlas_mcl_p%02X.png
-
 # メインフォントアトラスのファイル名規則を記述します（例: PixelMplus等）。
 mod_mcl_signs_main_atlas_pattern (Main Atlas Filename Pattern) string unicode_main%02x.png
 
