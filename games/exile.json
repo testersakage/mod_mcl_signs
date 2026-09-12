@@ -1,0 +1,59 @@
+{
+  "debug": "off",
+  "game_id": "exile",
+  "game_title": "Exile Survival Game",
+  "game_ver": "2026-09-05",
+
+  "sign_dye_code": {
+    "ncrafting:dye_red": "710e13",
+    "ncrafting:dye_crimson": "5d2007",
+    "ncrafting:dye_yellow": "938a34",
+    "ncrafting:dye_green": "263e28",
+    "ncrafting:dye_blue": "245eaa",
+    "ncrafting:dye_indigo": "444171",
+    "ncrafting:dye_black": "202020"
+  },
+  "glow_sign_item": [
+    ""
+  ],
+
+  "signs": [
+    { "name": "wood", "color": "#765533" },
+    { "name": "iron", "color": "#AAAAAA" }
+  ],
+
+  "crafts": [
+    {
+      "output": "mod_mcl_signs:standing_sign_wood 3",
+      "recipe": [
+        ["", "nodes_nature:amma_log", ""],
+        ["", "nodes_nature:amma_log", ""],
+        ["", "tech:stick", ""]
+      ]
+    },
+    {
+      "output": "mod_mcl_signs:standing_sign_iron 3",
+      "recipe": [
+        ["", "tech:iron_ingot", ""],
+        ["", "tech:iron_ingot", ""],
+        ["", "tech:stick", ""]
+      ]
+    },
+    {
+      "output": "mod_mcl_signs:hanging_sign_wood 2",
+      "recipe": [
+        ["", "tech:stick", ""],
+        ["", "nodes_nature:amma_log", ""],
+        ["", "nodes_nature:amma_log", ""]
+      ]
+    },
+    {
+      "output": "mod_mcl_signs:hanging_sign_iron 2",
+      "recipe": [
+        ["", "tech:stick", ""],
+        ["", "tech:iron_ingot", ""],
+        ["", "tech:iron_ingot", ""]
+      ]
+    }
+  ]
+}

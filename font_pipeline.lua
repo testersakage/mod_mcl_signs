@@ -1,6 +1,4 @@
--- =================================================================
--- 🖼️ font_pipeline.lua (メイン/サブ設定完全連動・スマート解決版)
--- =================================================================
+-- mod_mcl_signs/font_pipeline.lua
 
 mcl_font_pipeline = {}
 
@@ -117,7 +115,7 @@ end
 
 -- 4. 【メインゲート】本家 charmap 連携 ＆ 3段階フォールバック解決
 function mcl_font_pipeline.resolve_char(code, fallback_charmap)
-	local current_charmap = fallback_charmap or _G.charmap or charmap or {}
+	local current_charmap = fallback_charmap or _G.charmap or mod_mcl_signs.charmap or {}
 
 	if use_compat_mode then
 		if code >= 0x0500 then

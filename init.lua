@@ -1,26 +1,4 @@
--- table.merge が存在しない場合のフォールバック定義
-if not table.merge then
-	table.merge = function(t1, t2, t3, t4)
-		local result = {}
-		-- 1つ目のテーブルをコピー
-		if t1 then
-			for k, v in pairs(t1) do result[k] = v end
-		end
-		-- 2つ目のテーブルを上書き結合
-		if t2 then
-			for k, v in pairs(t2) do result[k] = v end
-		end
-		-- 3つ目のテーブルがあれば上書き結合
-		if t3 then
-			for k, v in pairs(t3) do result[k] = v end
-		end
-		-- 4つ目のテーブルがあれば上書き結合
-		if t4 then
-			for k, v in pairs(t4) do result[k] = v end
-		end
-		return result
-	end
-end
+-- mod_mcl_signs/init.lua
 
 mod_mcl_signs = {}
 
@@ -28,6 +6,47 @@ local modname = core.get_current_modname()
 
 local S = core.get_translator(modname)
 local modpath = core.get_modpath(modname)
+
+local Env        = _G.SignEnv        or dofile(modpath .. "/env.lua") -- 調査
+
+-- SignEnv の判定結果に基づき JSON パスを決定
+local json_filename = Env.game_id .. ".json"
+local json_path = modpath .. "/games/" .. json_filename
+
+local function load_json_config(path)
+	local file = io.open(path, "r")
+	if not file then return nil end
+	local content = file:read("*all")
+	file:close()
+	return core.parse_json(content)
+end
+
+-- 設定ファイルのロード（見つからない場合は minetest.json へフォールバック）
+local json_config = load_json_config(json_path)
+if not json_config then
+	core.log("action", "[mod_mcl_signs] No configuration found for game '" .. Env.game_id .. "'. Falling back to minetest.json")
+	json_path = modpath .. "/games/minetest.json"
+	json_config = load_json_config(json_path)
+else
+	core.log("action", "[mod_mcl_signs] Loading sign configuration for game: " .. Env.game_id)
+end
+
+if not json_config or type(json_config) ~= "table" then
+	core.log("error", "[mod_mcl_signs] Critical Error: Failed to load or parse JSON config from: " .. json_path)
+	return
+end
+
+-- table.merge が存在しない場合のフォールバック定義
+if not table.merge then
+	table.merge = function(t1, t2, t3, t4)
+		local result = {}
+		if t1 then			for k, v in pairs(t1) do result[k] = v end		end
+		if t2 then			for k, v in pairs(t2) do result[k] = v end		end
+		if t3 then			for k, v in pairs(t3) do result[k] = v end		end
+		if t4 then			for k, v in pairs(t4) do result[k] = v end		end
+		return result
+	end
+end
 
 -- =================================================================
 -- コピーした独自UTF-8ライブラリ (utf8.lua) を安全に読み込む
@@ -39,19 +58,19 @@ if type(utf8) ~= "table" then
 	utf8 = _G.utf8 or {}
 end
 
+dofile(modpath .. "/font_pipeline.lua") -- 追加
+
 -- Character map (see API.md for reference)
 --local charmap = {}
-charmap = {}
+mod_mcl_signs.charmap = {}
 for line in io.lines(modpath .. DIR_DELIM .. "characters.tsv") do
 	local split = line:split("\t")
 	if #split == 3 then
 		local char, img, _ = split[1], split[2], split[3] -- 3rd is ignored, reserved for width
 		local code = utf8.codepoint(char)
-		charmap[code] = img
+		mod_mcl_signs.charmap[code] = img
 	end
 end
-
-dofile(modpath .. "/font_pipeline.lua") -- 追加
 
 local signs_editable = core.settings:get_bool("mcl_signs_editable", false)
 
@@ -66,50 +85,28 @@ local CHAR_WIDTH = 5
 local SIGN_GLOW_INTENSITY = 14
 
 local NEWLINE = {
-	[0x000A] = true,
-	[0x000B] = true,
-	[0x000C] = true,
+	[0x000A] = true,	[0x000B] = true,	[0x000C] = true,
 	-- U+000D (CR) is dropped on U-string conversion
-	[0x0085] = true,
-	[0x2028] = true,
-	[0x2029] = true,
+	[0x0085] = true,	[0x2028] = true,	[0x2029] = true,
 }
 
 local WHITESPACE = {
-	[0x0009] = true,
-	[0x0020] = true,
+	[0x0009] = true,	[0x0020] = true,
 	-- U+00A0 is a whitespace, but a non-breaking one
-	[0x1680] = true,
-	[0x2000] = true,
-	[0x2001] = true,
-	[0x2002] = true,
-	[0x2003] = true,
-	[0x2004] = true,
-	[0x2005] = true,
-	[0x2006] = true,
+	[0x1680] = true,	[0x2000] = true,	[0x2001] = true,	[0x2002] = true,
+	[0x2003] = true,	[0x2004] = true,	[0x2005] = true,	[0x2006] = true,
 	-- U+2007 is a whitespace, but a non-breaking one
-	[0x2008] = true,
-	[0x2009] = true,
-	[0x200A] = true,
+	[0x2008] = true,	[0x2009] = true,	[0x200A] = true,
 	-- U+202F is a whitespace, but a non-breaking one
-	[0x205F] = true,
-	[0x3000] = true,
+	[0x205F] = true,	[0x3000] = true,
 }
 
 local HYPHEN = {
-	[0x002D] = true,
-	[0x00AD] = true,
-	[0x058A] = true,
-	[0x05BE] = true,
-	[0x1806] = true,
-	[0x2010] = true,
+	[0x002D] = true,	[0x00AD] = true,	[0x058A] = true,
+	[0x05BE] = true,	[0x1806] = true,	[0x2010] = true,
 	-- U+2011 is a hyphen, but a non-breaking one
-	[0x2E17] = true,
-	[0x2E5D] = true,
-	[0x30FB] = true,
-	[0xFE63] = true,
-	[0xFF0D] = true,
-	[0xFF65] = true,
+	[0x2E17] = true,	[0x2E5D] = true,	[0x30FB] = true,
+	[0xFE63] = true,	[0xFF0D] = true,	[0xFF65] = true,
 }
 
 local CR_CODEPOINT = utf8.codepoint("\r") -- ignored
@@ -119,9 +116,7 @@ local DEFAULT_COLOR = "#000000"
 
 local F = core.formspec_escape
 
--- =================================================================
--- マルチゲーム対応：defaultテーブルが存在しない場合のフォールバック
--- =================================================================
+-- サウンド設定
 if not default then
 	default = {}
 end
@@ -284,7 +279,7 @@ local function subseq(ustr, s, e)
 end
 
 -- =====================================================================
--- 💡 2. 自動折り返し（改行）判定関数 (新モジュールの全半角ウェイトに結合)
+-- 2. 自動折り返し（改行）判定関数 (新モジュールの全半角ウェイトに結合)
 -- =====================================================================
 function ustring_to_line_array(ustr)
 	local lines = {}
@@ -328,7 +323,7 @@ function ustring_to_line_array(ustr)
 end
 
 -- =====================================================================
--- 💡 3. 行テクスチャ生成関数 (下地スタンプの設定連動修正版)
+-- 3. 行テクスチャ生成関数 (下地スタンプの設定連動修正版)
 -- =====================================================================
 local function generate_line(ustr, lineno, line_width, line_height, default_char_width)
 	local texture = ""
@@ -342,7 +337,7 @@ local function generate_line(ustr, lineno, line_width, line_height, default_char
 			code = 32
 		end
 
-		local tex, w = mcl_font_pipeline.resolve_char(code, charmap)
+		local tex, w = mcl_font_pipeline.resolve_char(code, mod_mcl_signs.charmap)
 
 		width = width + w
 		maxw = math.max(width, maxw)
@@ -638,55 +633,76 @@ function sign_tpl.on_place(itemstack, placer, pointed_thing)
 	return itemstack
 end
 
+-- アイテムから適用すべきカラーコードをJSONから直接取得するヘルパー関数
+local function get_color_from_dye(item_name)
+	if json_config.sign_dye_code and json_config.sign_dye_code[item_name] then
+		local code = json_config.sign_dye_code[item_name]
+		-- 頭に '#' がついていない場合は付与する
+		if string.sub(code, 1, 1) ~= "#" then
+			code = "#" .. code
+		end
+		return code -- カラーコード（例: "#ffffff"）を返す
+	end
+	return nil
+end
+
+-- アイテムが発光アイテムとしてJSONに登録されているかチェックするヘルパー関数
+local function is_glow_item(item_name)
+	if not json_config.glow_sign_item or type(json_config.glow_sign_item) ~= "table" then
+		return false
+	end
+
+	for _, glow_item in ipairs(json_config.glow_sign_item) do
+		if item_name == glow_item then
+			return true
+		end
+	end
+	return false
+end
+
 function sign_tpl.on_rightclick(pos, _, clicker, itemstack, _)
-	-- Minecloniaの輝くイカスミを、標準的なグループ（または特定のアイテム）に変更
-	-- 例として標準の白や黄色の染料、あるいはMOD固有のアイテムに変更可能です
 	local item_name = itemstack:get_name()
-	if item_name == "mcl_mobitems:glow_ink_sac" or item_name == "default:glow_item" or core.get_item_group(item_name, "dye") > 0 then
+	local player_name = clicker:get_player_name()
+	
+	local has_glow_effect = is_glow_item(item_name)
+	local dye_color_code = get_color_from_dye(item_name)
+
+	-- 染料または発光アイテムが使われた場合の処理
+	if has_glow_effect or dye_color_code then
 		local data = get_signdata(pos)
 		if data then
-			if data.color == "#000000" then
-				data.color = "#7e7e7e" --black doesn't glow in the dark
+			local next_glow = data.glow or "false"
+			local next_color = data.color or "#ffffff"
+			
+			if has_glow_effect then
+				if next_color == "#000000" then
+					next_color = "#7e7e7e" -- 黒は暗闇で見えなくなるため補正
+				end
+				next_glow = "true"
+			elseif dye_color_code then
+				next_color = dye_color_code
 			end
-			set_signmeta(pos,{glow="true",color=data.color})
-			-- 関数名を mod_mcl_signs に修正
+			
+			set_signmeta(pos, {glow = next_glow, color = next_color})
 			mod_mcl_signs.update_sign(pos)
-			if not core.is_creative_enabled(clicker:get_player_name()) then
+			
+			if not core.is_creative_enabled(player_name) then
 				itemstack:take_item()
 			end
+			return itemstack
 		end
+		
 	elseif signs_editable then
-		-- Mineclonia固有の保護チェックを、Luanti標準の保護チェック (core.is_protected) に書き換え
-		local name = clicker:get_player_name()
-		if not core.is_protected(pos, name) then
+		-- 通常の編集画面表示（保護チェック付き）
+		if not core.is_protected(pos, player_name) then
 			show_formspec(clicker, pos)
 		end
 	end
+	
 	return itemstack
 end
 
--- 染料の名前から16進数カラーコード（RGB）を引くための標準的な変換テーブル
--- Minecloniaの mcl_dyes.colors の代わりに使用します
-local dye_colors = {
-	white      = "#ffffff",
-	grey       = "#808080",
-	dark_grey  = "#404040",
-	black      = "#000000",
-	red        = "#ff0000",
-	orange     = "#ff8000",
-	yellow     = "#ffff00",
-	green      = "#00ff00",
-	dark_green = "#008000",
-	cyan       = "#00ffff",
-	blue       = "#0000ff",
-	magenta    = "#ff00ff",
-	pink       = "#ffc0cb",
-	brown      = "#a52a2a",
-	violet     = "#800080",
-}
-
 function sign_tpl.on_destruct(pos)
-	-- 関数名を mod_mcl_signs に修正
 	mod_mcl_signs.get_text_entity(pos, true)
 	mod_mcl_signs.close_formspec(pos)
 end
@@ -694,12 +710,14 @@ end
 function sign_tpl._on_dye_place(pos, color)
 	-- Minecloniaの mcl_dyes を使わず、上記の標準的なカラーテーブルを参照する
 	-- 定義がない色の場合はデフォルトとして白 (#ffffff) にフォールバック
-	local rgb_color = dye_colors[color] or "#ffffff"
-	
+	local rgb_color = json_config.sign_dye_code["mcl_dyes:" .. color] or "#ffffff"
+	if string.sub(rgb_color, 1, 1) ~= "#" then
+		rgb_color = "#" .. rgb_color
+	end
+
 	set_signmeta(pos, {
 		color = rgb_color
 	})
-	-- 関数名を mod_mcl_signs に修正
 	mod_mcl_signs.update_sign(pos)
 end
 
@@ -767,12 +785,8 @@ local sign_hanging = table.merge(sign_tpl,{
 	selection_box = {
 		type = "fixed",
 		fixed = {
-			-0.4375,
-			-0.5,
-			-0.0625,
-			0.4375,
-			0.125,
-			0.0625,
+			-0.4375,			-0.5,			-0.0625,
+			0.4375,			0.125,			0.0625,
 		},
 	},
 	-- グループ設定を標準のものに変更（axey, handy などを削除/変更）
@@ -797,20 +811,12 @@ local sign_hanging_wall = table.merge(sign_tpl,{
 		type = "fixed",
 		fixed = {
 			{
-				-0.4375,
-				-0.5,
-				-0.0625,
-				0.4375,
-				0.125,
-				0.0625,
+				-0.4375,				-0.5,				-0.0625,
+				0.4375,				0.125,				0.0625,
 			},
 			{
-				-0.5,
-				0.375,
-				-0.125,
-				0.5,
-				0.5,
-				0.125,
+				-0.5,				0.375,				-0.125,
+				0.5,				0.5,				0.125,
 			},
 		},
 	},
@@ -818,12 +824,8 @@ local sign_hanging_wall = table.merge(sign_tpl,{
 		type = "fixed",
 		fixed = {
 			{
-				-0.5,
-				0.375,
-				-0.125,
-				0.5,
-				0.5,
-				0.125,
+				-0.5,				0.375,				-0.125,
+				0.5,				0.5,				0.125,
 			},
 		},
 	},
@@ -849,12 +851,8 @@ local sign_hanging_attached = table.merge (sign_tpl, {
 		type = "fixed",
 		fixed = {
 			{
-				-0.4375,
-				-0.5,
-				-0.4375,
-				0.4375,
-				0.125,
-				0.4375,
+				-0.4375,				-0.5,				-0.4375,
+				0.4375,				0.125,				0.4375,
 			},
 		},
 	},
@@ -901,211 +899,91 @@ function mod_mcl_signs.register_hanging_sign (name, def)
 end
 
 -- =================================================================
--- ゲーム環境判定とJSONによる動的登録システム（自動ID逆引き補正機能付き）
+-- SignEnvと連携した JSON による動的登録システム（高速・決定論的ロード）
 -- =================================================================
 
-local game_info = core.get_game_info()
-local game_id = (game_info and game_info.id) or "minetest"
+local is_debug = (json_config.debug == "on" or json_config.debug == true)
 
-local json_filename = game_id .. ".json"
-local json_path = modpath .. "/games/" .. json_filename
+-- -----------------------------------------------------------------------------
+-- アイテムIDおよびグループの存在検証（高速一元チェック）
+-- -----------------------------------------------------------------------------
+local function is_valid_ingredient(item_or_group)
+	if not item_or_group or type(item_or_group) ~= "string" or item_or_group == "" then
+		return true -- 空文字列は有効な空マスとして扱う
+	end
 
-local function file_exists(path)
-	local f = io.open(path, "r")
-	if f then f:close() return true end
-	return false
+	-- 1. グループ指定 ("group:wood" など) の場合
+	if item_or_group:sub(1, 6) == "group:" then
+		return true
+	end
+
+	-- 2. 単体アイテムID の存在チェック
+	return core.registered_items[item_or_group] ~= nil
 end
 
-if not file_exists(json_path) then
-	core.log("action", "[mod_mcl_signs] No configuration found for game '" .. game_id .. "'. Falling back to minetest.json")
-	json_path = modpath .. "/games/minetest.json"
-else
-	core.log("action", "[mod_mcl_signs] Loading sign configuration for game: " .. game_id)
-end
-
--- あらゆる命名規則のブレを自動判別して本物に変えるデータ駆動型・補正関数
-local function find_correct_item_id(wrong_id)
-	-- 1. 安全チェック：値が空、または文字列でない場合は即座にスキップ
-	if not wrong_id or type(wrong_id) ~= "string" or wrong_id == "" then
-		return ""
-	end
-
-	-- 2. そのままのIDでシステムに実在すれば最速で返す
-	if core.registered_items[wrong_id] then
-		return wrong_id
-	end
-
-	-- 3. 【Changelog追跡】Luantiのグローバル・エイリアス（ID変更履歴）をチェック
-	if core.registered_aliases and core.registered_aliases[wrong_id] then
-		local alias_id = core.registered_aliases[wrong_id]
-		if core.registered_items[alias_id] then return alias_id end
-	end
-
-	-- 4. ネームスペースとアイテム名に分解
-	local parts = string.split(wrong_id, ":")
-	if not parts or #parts < 2 then return wrong_id end
-	
-	-- ★【修正箇所】インデックス [1] と [2] を正確に指定して型エラーを防止
-	local current_mod = parts[1]
-	local current_name = parts[2]
-	
-	-- 5. 鎖（チェーン）の特殊追跡
-	if string.find(current_name, "chain") then
-		for itemstring, _ in pairs(core.registered_items) do
-			if string.find(itemstring:lower(), "chain") then return itemstring end
-		end
-	end
-
-	-- 6. アンダースコアで単語を分割し、AND検索用のクエリを作成
-	local raw_tokens = string.split(current_name, "_")
-	local search_tokens = {}
-	for _, token in ipairs(raw_tokens) do
-		if token ~= "wood" and token ~= "planks" and token ~= "log" and token ~= "stem" and token ~= "" then
-			table.insert(search_tokens, token:lower())
-		end
-	end
-	if #search_tokens == 0 then
-		for _, token in ipairs(raw_tokens) do table.insert(search_tokens, token:lower()) end
-	end
-
-	-- 7. 全登録アイテムから「すべての単語が含まれる (AND)」候補を抽出
-	local candidates = {}
-	for itemstring, def in pairs(core.registered_items) do
-		local check_id = itemstring:lower()
-		
-		-- 自分自身の看板MOD（mod_mcl_signs）や、他MODのすべての「看板アイテム(sign)」は素材候補から除外
-		if not string.find(check_id, "mod_mcl_signs") and not string.find(check_id, "sign") then
-			local all_match = true
-			for _, token in ipairs(search_tokens) do
-				if not string.find(check_id, token, 1, true) then
-					all_match = false
-					break
-				end
+-- -----------------------------------------------------------------------------
+-- ① 看板ノードの動的登録
+-- -----------------------------------------------------------------------------
+if json_config.signs and type(json_config.signs) == "table" then
+	for _, sign in ipairs(json_config.signs) do
+		if sign.name then
+			local custom_def = {}
+			
+			if sign.color then
+				mod_mcl_signs.register_sign(sign.name, sign.color, custom_def)
 			end
 			
-			if all_match then
-				-- 看板の素材になり得る建材系（planks, wood, log, stem等、またはオーク原木の性質）にターゲットを絞る
-				if string.find(check_id, "plank") or string.find(check_id, "wood") or string.find(check_id, "log") or string.find(check_id, "stem") or string.find(check_id, "trunk") or string.find(check_id, "tree") then
-					-- 二次加工品（階段、ハーフブロック、フェンス、ドア等）は確実に素材から除外
-					if not string.find(check_id, "stair") and not string.find(check_id, "slab") and not string.find(check_id, "fence") and not string.find(check_id, "gate") and not string.find(check_id, "pressure") and not string.find(check_id, "door") then
-						table.insert(candidates, itemstring)
-					end
-				end
+			-- 吊り下げ看板（3変種）
+			if mod_mcl_signs.register_hanging_sign then
+				mod_mcl_signs.register_hanging_sign(sign.name, custom_def)
 			end
 		end
 	end
-
-	-- 8. 候補の自動確定
-	if #candidates == 1 then
-		return candidates[1]
-	elseif #candidates > 1 then
-		-- 複数ある場合は、素材として一番プレーンなもの（strippedがあればそれ、planksがあればそれ）を優先選択
-		for _, cand in ipairs(candidates) do
-			if string.find(current_name, "stripped") and string.find(cand:lower(), "stripped") then return cand end
-			if (string.find(current_name, "wood") or string.find(current_name, "planks")) and (string.find(cand:lower(), "plank") or string.find(cand:lower(), "wood")) then return cand end
-		end
-		return candidates[1] -- 最終フォールバック
-	end
-
-	return wrong_id
 end
 
-local file = io.open(json_path, "r")
-if file then
-	local content = file:read("*all")
-	file:close()
-	
-	local data = core.parse_json(content)
-	
-	if data and type(data) == "table" then
-		local is_debug = (data.debug == "on" or data.debug == true)
-		
-		-- ① 看板ノードの動的登録
-		if data.signs and type(data.signs) == "table" then
-			for _, sign in ipairs(data.signs) do
-				if sign.name and sign.color then
-					mod_mcl_signs.register_sign(sign.name, sign.color)
-					mod_mcl_signs.register_hanging_sign(sign.name)
-				end
-			end
-		end
-		
-
-		-- =================================================================
-		-- 【データ駆動型】JSONの定義に基づく古いクラフトレシピの自動消去
-		-- =================================================================
-		if data.clear_crafts and type(data.clear_crafts) == "table" then
+-- -----------------------------------------------------------------------------
+-- ② 古いクラフトレシピの消去
+-- -----------------------------------------------------------------------------
+if json_config.clear_crafts and type(json_config.clear_crafts) == "table" then
+	for _, output_item in ipairs(json_config.clear_crafts) do
+		if output_item and output_item ~= "" then
+			core.clear_craft({ output = output_item })
 			if is_debug then
-				core.log("action", "[mod_mcl_signs] --- Starting craft recipe clearance ---")
-			end
-			for _, output_item in ipairs(data.clear_crafts) do
-				if output_item and output_item ~= "" then
-					-- JSONで指定された古い完成品IDのレシピをメモリと検索MODから完全に抹消
-					core.clear_craft({ output = output_item })
-					if is_debug then
-						core.log("action", "[mod_mcl_signs]  [CLEARED] Removed legacy recipe for: " .. output_item)
-					end
-				end
+				core.log("action", "[mod_mcl_signs] [CLEARED] Removed recipe for: " .. output_item)
 			end
 		end
-
-		-- ② クラフトレシピの動的登録と自動検証
-		if data.crafts and type(data.crafts) == "table" then
-			for _, craft in ipairs(data.crafts) do
-				if craft.output and craft.recipe then
-					
-					local recipe_valid = true
-					local corrected_recipe = {}
-					
-					if is_debug then
-						core.log("action", "[mod_mcl_signs] --- Validating recipe for: " .. craft.output .. " ---")
-					end
-					
-					for row_idx, row in ipairs(craft.recipe) do
-						corrected_recipe[row_idx] = {}
-						for col_idx, item in ipairs(row) do
-							if item ~= "" then
-								local real_id = find_correct_item_id(item)
-								
-								if real_id and core.registered_items[real_id] then
-									corrected_recipe[row_idx][col_idx] = real_id
-									if is_debug then
-										local def = core.registered_items[real_id]
-										local display_name = (def and def.description) or "No description"
-										if real_id ~= item then
-											core.log("action", "[mod_mcl_signs]  [FIXED] '" .. item .. "' -> AUTO CORRECTED TO: '" .. real_id .. "' (" .. display_name .. ")")
-										else
-											core.log("action", "[mod_mcl_signs]  [OK] " .. item .. " -> '" .. display_name .. "'")
-										end
-									end
-								else
-									core.log("error", "[mod_mcl_signs] [ERROR] Item NOT FOUND: '" .. item .. "' (Row " .. row_idx .. ", Col " .. col_idx .. ")")
-									recipe_valid = false
-									corrected_recipe[row_idx][col_idx] = item
-								end
-							else
-								corrected_recipe[row_idx][col_idx] = ""
-							end
-						end
-					end
-					
-					if recipe_valid then
-						core.register_craft({
-							output = craft.output,
-							recipe = corrected_recipe
-						})
-						if is_debug then
-							core.log("action", "[mod_mcl_signs]  [SUCCESS] Recipe registered for " .. craft.output)
-						end
-					else
-						core.log("error", "[mod_mcl_signs]  [FAILED] Recipe skipped due to missing ingredients: " .. craft.output)
-					end
-				end
-			end
-		end
-	else
-		core.log("error", "[mod_mcl_signs] Failed to parse JSON configuration from: " .. json_path)
 	end
-else
-	core.log("error", "[mod_mcl_signs] Critical Error: JSON file could not be opened.")
 end
+
+-- -----------------------------------------------------------------------------
+-- ③ クラフトレシピの動的登録と直接検証
+-- -----------------------------------------------------------------------------
+if json_config.crafts and type(json_config.crafts) == "table" then
+	for _, craft in ipairs(json_config.crafts) do
+		if craft.output and craft.recipe then
+			local recipe_valid = true
+
+			for row_idx, row in ipairs(craft.recipe) do
+				for col_idx, item in ipairs(row) do
+					if item ~= "" and not is_valid_ingredient(item) then
+						core.log("error", "[mod_mcl_signs] [ERROR] Item NOT FOUND in game: '" .. item .. "' (Row " .. row_idx .. ", Col " .. col_idx .. ")")
+						recipe_valid = false
+					end
+				end
+			end
+
+			if recipe_valid then
+				core.register_craft({
+					output = craft.output,
+					recipe = craft.recipe
+				})
+				if is_debug then
+					core.log("action", "[mod_mcl_signs] [SUCCESS] Recipe registered for: " .. craft.output)
+				end
+			else
+				core.log("error", "[mod_mcl_signs] [FAILED] Recipe skipped due to missing item: " .. craft.output)
+			end
+		end
+	end
+end
+

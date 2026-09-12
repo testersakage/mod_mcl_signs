@@ -3,6 +3,29 @@
   "game_id": "mineclonia",
   "game_title": "Mineclonia",
   "game_ver": "2026-07-18",
+
+  "sign_dye_code": {
+    "mcl_dyes:white": "d0d6d7",
+    "mcl_dyes:silver": "818177",
+    "mcl_dyes:grey": "383c40",
+    "mcl_dyes:black": "080a10",
+    "mcl_dyes:purple": "6821a0",
+    "mcl_dyes:blue": "2e3094",
+    "mcl_dyes:light_blue": "258ec9",
+    "mcl_dyes:cyan": "167b8c",
+    "mcl_dyes:green": "4b5e25",
+    "mcl_dyes:lime": "60ac19",
+    "mcl_dyes:yellow": "f1b216",
+    "mcl_dyes:brown": "633d20",
+    "mcl_dyes:orange": "e26501",
+    "mcl_dyes:red": "912222",
+    "mcl_dyes:magenta": "ab31a2",
+    "mcl_dyes:pink": "d56791"
+  },
+  "glow_sign_item": [
+    "mcl_mobitems:glow_ink_sac"
+  ],
+
   "signs": [
     {
       "name": "iron",

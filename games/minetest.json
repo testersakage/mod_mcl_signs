@@ -3,6 +3,28 @@
   "game_id": "minetest",
   "game_title": "Minetest Game",
   "game_ver": "2026-07-13",
+
+  "sign_dye_code": {
+    "dye:white": "ffffff",
+    "dye:grey": "808080",
+    "dye:dark_grey": "404040",
+    "dye:black": "1c1c1c",
+    "dye:violet": "7f00ff",
+    "dye:blue": "0000ff",
+    "dye:cyan": "00ffff",
+    "dye:dark_green": "006400",
+    "dye:green": "00ff00",
+    "dye:yellow": "ffff00",
+    "dye:brown": "8b4513",
+    "dye:orange": "ff8c00",
+    "dye:red": "ff0000",
+    "dye:magenta": "ff00ff",
+    "dye:pink": "ffc0cb"
+  },
+  "glow_sign_item": [
+    "mcl_mobitems:glow_ink_sac"
+  ],
+
   "signs": [
     {
       "name": "wood",
