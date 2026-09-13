@@ -4,6 +4,9 @@
   "game_title": "VoxeLibre / MineClone2",
   "game_ver": "0.91.2",
 
+  "sound_mod": "mcl_sounds",
+  "sound_obj": "node_sound_wood_defaults",
+
   "sign_dye_code": {
     "mcl_dye:white": "d0d6d7",
     "mcl_dye:grey": "818177",
@@ -40,17 +43,17 @@
     "mcl_signs:wall_sign_warped"
   ],
   "signs": [
-    { "name": "oak", "color": "#b5915d" },
-    { "name": "spruce", "color": "#765533" },
-    { "name": "birch", "color": "#d7ccaa" },
-    { "name": "jungle", "color": "#a27558" },
-    { "name": "acacia", "color": "#af5e38" },
-    { "name": "dark_oak", "color": "#47311d" },
-    { "name": "mangrove", "color": "#733333" },
-    { "name": "cherry_blossom", "color": "#e0b2b2" },
-    { "name": "bamboo", "color": "#dbcb74" },
-    { "name": "crimson", "color": "#8b3b55" },
-    { "name": "warped", "color": "#367f7e" }
+    { "name": "oak", "color": "#9c7558" },
+    { "name": "spruce", "color": "#694c36" },
+    { "name": "birch", "color": "#b19173" },
+    { "name": "jungle", "color": "#91613c" },
+    { "name": "acacia", "color": "#db7550" },
+    { "name": "dark_oak", "color": "#533a21" },
+    { "name": "mangrove", "color": "#a23e33" },
+    { "name": "cherry_blossom", "color": "#ffa5a2" },
+    { "name": "bamboo", "color": "#b1844b" },
+    { "name": "crimson", "color": "#6f2747" },
+    { "name": "warped", "color": "#086b56" }
   ],
   "crafts": [
     {

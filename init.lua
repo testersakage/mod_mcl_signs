@@ -116,23 +116,6 @@ local DEFAULT_COLOR = "#000000"
 
 local F = core.formspec_escape
 
--- サウンド設定
-if not default then
-	default = {}
-end
-
--- node_sound_wood_defaults が未定義の場合、環境に応じて音を設定する
-if not default.node_sound_wood_defaults then
-	default.node_sound_wood_defaults = function()
-		-- もし VoxeLibre/Mineclonia 環境 (mcl_sounds) があれば、その木製品の音を流用する
-		if mcl_sounds and mcl_sounds.node_sound_wood_defaults then
-			return mcl_sounds.node_sound_wood_defaults()
-		end
-		-- どちらも無い場合は、クラッシュを防ぐために空のテーブルを返す
-		return {}
-	end
-end
-
 -- Template definition
 local sign_tpl = {
 	-- 独自のヘルプ定義（MinecloniaのTooltips/Documentation用なので不要なら削除可能、残しても害はありません）
@@ -164,7 +147,7 @@ local sign_tpl = {
 	stack_max = 16,
 	
 	-- サウンドを標準の木に変更
-	sounds = default.node_sound_wood_defaults(),
+--	sounds = default.node_sound_wood_defaults(),
 	
 	node_placement_prediction = "",
 	on_rotate = false,
@@ -172,6 +155,15 @@ local sign_tpl = {
 	-- MOD独自の管理用データ（mcl_ プレフィックスをフォルダ名に変更）
 	_mod_mcl_sign_type = "standing"
 }
+
+-- 追加設定（サウンド）
+if _G[json_config.sound_mod] and _G[json_config.sound_mod][json_config.sound_obj] then
+    sign_tpl.sounds = _G[json_config.sound_mod][json_config.sound_obj]()
+else
+    sign_tpl.sounds = {}
+end
+-- 追加設定（ツールチップ）
+sign_tpl._tt_help = sign_tpl._tt_help .. "\n+Font Atlas Render"
 
 -- Signs data / meta
 local function normalize_rotation(rot)
@@ -708,16 +700,13 @@ function sign_tpl.on_destruct(pos)
 end
 
 function sign_tpl._on_dye_place(pos, color)
-	-- Minecloniaの mcl_dyes を使わず、上記の標準的なカラーテーブルを参照する
 	-- 定義がない色の場合はデフォルトとして白 (#ffffff) にフォールバック
 	local rgb_color = json_config.sign_dye_code["mcl_dyes:" .. color] or "#ffffff"
 	if string.sub(rgb_color, 1, 1) ~= "#" then
 		rgb_color = "#" .. rgb_color
 	end
 
-	set_signmeta(pos, {
-		color = rgb_color
-	})
+	set_signmeta(pos, { color = rgb_color })
 	mod_mcl_signs.update_sign(pos)
 end
 

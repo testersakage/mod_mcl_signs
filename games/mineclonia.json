@@ -4,6 +4,9 @@
   "game_title": "Mineclonia",
   "game_ver": "2026-07-18",
 
+  "sound_mod": "mcl_sounds",
+  "sound_obj": "node_sound_wood_defaults",
+
   "sign_dye_code": {
     "mcl_dyes:white": "d0d6d7",
     "mcl_dyes:silver": "818177",

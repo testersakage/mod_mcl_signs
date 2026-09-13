@@ -4,6 +4,9 @@
   "game_title": "Minetest Game",
   "game_ver": "2026-07-13",
 
+  "sound_mod": "default",
+  "sound_obj": "node_sound_wood_defaults",
+
   "sign_dye_code": {
     "dye:white": "ffffff",
     "dye:grey": "808080",
@@ -22,7 +25,7 @@
     "dye:pink": "ffc0cb"
   },
   "glow_sign_item": [
-    "mcl_mobitems:glow_ink_sac"
+    "default:mese_crystal_fragment"
   ],
 
   "signs": [

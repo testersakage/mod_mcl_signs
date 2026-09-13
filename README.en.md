@@ -9,7 +9,7 @@ All hard dependencies on Mineclonia's core APIs have been completely removed. Up
 
 This mod utilizes a font-atlas rendering method for text image generation.
 
-## ✨ Features
+## Features
 
 - **Consolidated Material Variations**: Smartly unifies sign variations into **"Wood"** and **"Iron"** when running under Minetest Game specifications.
 - **Dynamic Multi-Game Adaptation**: Built on a data-driven JSON architecture. It leverages `core.get_game_info()` to automatically detect the Game ID (`minetest`, `voxellibre`, etc.) and dynamically loads the corresponding configuration file.
@@ -18,14 +18,14 @@ This mod utilizes a font-atlas rendering method for text image generation.
 - **Beautiful Text Rendering**: Embeds a highly compatible internal UTF-8 text processing library (`utf8.lua`) originating from Mineclonia, preventing text clipping, misalignment, and character corruption.
 - **Advanced I18n**: Fully compatible with Luanti's native translation system, offering out-of-the-box support for both **English** and **Japanese** (excluding player-written text on signs).
 
-## 🚀 Installation
+## Installation
 
 1. Download this repository as a `.ZIP` file or clone it using git.
 2. Move the extracted folder into your Luanti `mods/` directory.
 3. Ensure the folder name is strictly renamed to **`mod_mcl_signs`**.
 4. Enable the mod in your world configuration menu.
 
-## 🛠️ Preparing the Atlas Textures
+## Preparing the Atlas Textures
 An atlas image profile is required if you want to display characters beyond U+0500 (such as Japanese) or if you prefer not to use the default `mcl_signs` font sheets.
 The supported font size is strictly locked to a monospaced **12x12px**, which perfectly matches the scaling of the standard `mcl_signs` specifications.
 
@@ -35,7 +35,7 @@ The supported font size is strictly locked to a monospaced **12x12px**, which pe
 4. To utilize the font fallback pipeline, generate an integration TSV file that lists all valid font characters inside your main atlas, and place it directly under the `mod_mcl_signs/` root directory.
 5. Configure the **Main Atlas Registry TSV Name** and **Fallback Sub-Atlas Pattern** fields, then click the "Apply" button.
 
-## 🔧 Post-Installation Setup
+## Post-Installation Setup
 
 Navigate to Luanti's **Settings -> Content -> Mods -> Standalone mcl Signs** to switch atlas profiles and finely adjust the textual display coordinates.
 
@@ -67,12 +67,12 @@ This mod automatically detects the running game environment and dynamically adju
 - **Other Contexts & Minetest Game (`minetest.json`)**:
   In accordance with standard specifications, the materials are streamlined into just 2 types: "Wood" and "Iron" (utilizing `default:wood` and `default:steel_ingot`).
 
-### 💡 Custom Expansion for Other Games
+### Custom Expansion for Other Games
 If you wish to add custom sign variations or recipes for your own game environment, you can easily implement them by creating a new definition file, using the existing JSON files inside the `games/` directory as a reference template.
 
 If you are unsure of the exact `ItemID` (internal node names) required to configure your custom crafting recipes, please utilize [Recipe_Maker](https://github.com/testersakage/recipe_maker) to look them up.
 
-## 📂 Folder Structure
+## Folder Structure
 
 ```text
 mod_mcl_signs/
@@ -81,6 +81,7 @@ mod_mcl_signs/
 ├─ models/             # Original 3D mesh assets (.obj)
 ├─ textures/           # Textures for wood/iron signs and custom font sheets
 ├─ atlas_sample.tsv    # Sample .tsv file
+├─ env.lua             # Environment check
 ├─ font_pipeline.lua   # Font Atlas Engine
 ├─ init.lua            # Refactored, high-performance main script
 ├─ mod.conf            # Mod configuration file (depends on `default` if available)
@@ -91,12 +92,12 @@ mod_mcl_signs/
 └─ README.md           # Japanese documentation
 ```
 
-## 💻 Supported Environments
+## Supported Environments
 
-- **Minimum Requirement**: **Luanti v5.4.0 or later** (Required for core Game ID detection APIs).
-- **Recommended Requirement**: **Luanti v5.15.2 or later** (Highly recommended for optimal engine performance and patch-level security updates).
+- **Minimum Requirement**: **Luanti v5.15.2 or later** (Highly recommended for optimal engine performance and patch-level security updates).
+- **Recommended Requirement**: **Luanti v5.17.0 or later** (patch-level security updates).
 
-## 📄 License
+## License
 
 Since this mod is built upon the collective works of Mineclonia and VoxeLibre, it inherits their respective open-source licensing:
 
