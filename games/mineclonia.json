@@ -29,6 +29,63 @@
     "mcl_mobitems:glow_ink_sac"
   ],
 
+  "wall_template": {
+    "mesh": "mcl_signs_signonwallmount.obj",
+    "paramtype2": "wallmounted",
+    "selection_box": {
+      "type": "wallmounted",
+      "wall_side": [-0.5, -0.25, -0.5, -0.410714, 0.25, 0.5]
+    },
+    "groups": { "axey": 1, "handy": 2, "sign": 1, "supported_node_wallmounted": 1, "deco_block": 1, "breaking_cactus" : 1 },
+    "_mod_mcl_sign_type": "wall"
+  },
+  "hanging_template": {
+    "mesh": "mcl_signs_sign_hanging.obj",
+    "tiles": [ "mcl_signs_sign_hanging.png" ],
+    "paramtype2": "4dir",
+    "use_texture_alpha": "clip",
+    "selection_box": {
+      "type": "fixed",
+      "fixed": [-0.4375, -0.5, -0.0625, 0.4375, 0.125, 0.0625]
+    },
+    "groups": { "axey": 1, "handy": 2, "sign": 1, "hanging_sign": 1, "attached_node": 4, "deco_block": 1, "breaking_cactus": 1 },
+    "_mod_mcl_sign_type": "hanging"
+  },
+  "hanging_wall_template": {
+    "mesh": "mcl_signs_sign_hanging_wall.obj",
+    "tiles": [ "mcl_signs_sign_hanging_wall.png" ],
+    "paramtype2": "4dir",
+    "use_texture_alpha": "clip",
+    "walkable": true,
+    "selection_box": {
+      "type": "fixed",
+      "fixed": [
+        [-0.4375, -0.5, -0.0625, 0.4375, 0.125, 0.0625], [-0.5, 0.375, -0.125, 0.5, 0.5, 0.125]
+      ]
+    },
+    "collision_box": {
+      "type": "fixed",
+      "fixed": [
+        [-0.5, 0.375, -0.125, 0.5, 0.5, 0.125]
+      ]
+    },
+    "groups": { "axey": 1, "handy": 2, "sign": 1, "hanging_sign": 1, "not_in_creative_inventory": 1 },
+    "_mod_mcl_sign_type": "hanging"
+  },
+  "hanging_attached_template": {
+    "mesh": "mcl_signs_sign_hanging_attached.obj",
+    "tiles": [ "mcl_signs_sign_hanging_wall.png" ],
+    "paramtype2": "degrotate",
+    "use_texture_alpha": "clip",
+    "selection_box": {
+      "type": "fixed",
+      "fixed": [
+        [-0.4375, -0.5, -0.4375, 0.4375, 0.125, 0.4375]
+      ]
+    },
+    "groups": { "axey": 1, "handy": 2, "sign": 1, "hanging_sign": 1, "attached_node": 4, "not_in_creative_inventory": 1 }
+  },
+
   "signs": [
     {
       "name": "iron",

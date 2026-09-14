@@ -584,24 +584,44 @@ function sign_tpl.on_place(itemstack, placer, pointed_thing)
 	else
 		-- Hanging sign.
 		if wdir == 0 then
-			if not ndef.walkable then
+			if not ndef.walkable and core.get_item_group(node.name, "sign") == 0 then
 				return itemstack
 			end
 
-			-- 複雑な独自AABB分解 (mcl_util.decompose_AABBs) を回避
-			-- ブロックの下側に吊り下げる際、標準的なフルブロックであればそのまま吊り下げ看板にする
-			local is_full_block = true
-			if ndef.node_box and ndef.node_box.type == "fixed" then
-				-- ノードボックスがカスタム形状の場合は念のため通常の吊り下げにする（簡易判定）
-				is_full_block = false
+			local is_full_bottom = false
+
+			-- 取付先がすでに看板(hanging_sign等)である場合
+			if core.get_item_group(node.name, "sign") ~= 0 then
+				is_full_bottom = false
+			-- 標準的なフルキューブブロック(drawtypeがnormal、またはnode_box未定義かつmesh未使用)
+			elseif ndef.drawtype == "normal" or (not ndef.node_box and not ndef.mesh) then
+				is_full_bottom = true
+			-- node_boxが明示的に設定されている場合
+			elseif ndef.node_box and ndef.node_box.type == "fixed" then
+				local box = ndef.node_box.fixed
+				-- 単一ボックスの場合の判定
+				if type(box[1]) == "number" then
+					if box[1] <= -0.5 and box[2] <= -0.5 and box[3] <= -0.5 and
+					   box[4] >= 0.5 and box[6] >= 0.5 then
+						is_full_bottom = true
+					end
+				-- 複数ボックスで構成されている場合
+				elseif type(box[1]) == "table" then
+					for _, b in ipairs(box) do
+						if b[1] <= -0.5 and b[2] <= -0.5 and b[3] <= -0.5 and
+						   b[4] >= 0.5 and b[6] >= 0.5 then
+							is_full_bottom = true
+							break
+						end
+					end
+				end
 			end
 
-			if is_full_block then
+			if is_full_bottom then
 				local dir = vector.subtract (above, placer:get_pos ())
 				local fourdir = core.dir_to_fourdir (dir)
 				placestack:set_name ("mod_mcl_signs:hanging_sign_" .. sign_wood)
-				itemstack, pos = core.item_place_node (placestack, placer, pointed_thing,
-								       fourdir)
+				itemstack, pos = core.item_place_node (placestack, placer, pointed_thing, fourdir)
 			else
 				local rot = normalize_rotation(placer:get_look_horizontal() * 180 / math.pi / 1.5)
 				placestack:set_name ("mod_mcl_signs:hanging_sign_attached_" .. sign_wood)
@@ -711,23 +731,8 @@ function sign_tpl._on_dye_place(pos, color)
 end
 
 -- Wall sign definition
-local sign_wall = table.merge(sign_tpl, {
-	mesh = "mcl_signs_signonwallmount.obj",
-	paramtype2 = "wallmounted",
-	selection_box = {
-		type = "wallmounted",
-		wall_side = {-0.5, -7/28, -0.5, -23/56, 7/28, 0.5}
-	},
-	-- グループ設定を標準のものに変更（axey, handy, supported_node などを削除/変更）
-	groups = {
-		choppy = 2,                    -- 斧で壊せる
-		oddly_breakable_by_hand = 2,  -- 素手で壊せる
---		attached_node = 1,            -- 壁が壊れたら看板も外れる（標準の壁掛け用）
-		sign = 1,
-	},
-	-- プレフィックスをこれまでに合わせた形式に変更
-	_mod_mcl_sign_type = "wall",
-})
+local wall_config_tpl = json_config and json_config.wall_template or {}
+local sign_wall = table.merge(sign_tpl, wall_config_tpl)
 
 local function colored_texture(texture, color)
 	return texture.."^[multiply:"..color
@@ -750,7 +755,7 @@ function mod_mcl_signs.register_sign(name, color, def)
 		drop = "mod_mcl_signs:standing_sign_"..name,
 		
 		_mod_mcl_sign_wood = name,
-		_mcl_sign_wood = name,
+--		_mcl_sign_wood = name,
 	}
 
 	def = def or {}
@@ -766,95 +771,13 @@ function mod_mcl_signs.register_sign(name, color, def)
 	core.register_node(":mod_mcl_signs:wall_sign_"..name, table.merge(sign_wall, wall_fields, def))
 end
 
-local sign_hanging = table.merge(sign_tpl,{
-	mesh = "mcl_signs_sign_hanging.obj",
-	tiles = { "mcl_signs_sign_hanging.png" },
-	paramtype2 = "4dir",
-	use_texture_alpha = "clip",
-	selection_box = {
-		type = "fixed",
-		fixed = {
-			-0.4375,			-0.5,			-0.0625,
-			0.4375,			0.125,			0.0625,
-		},
-	},
-	-- グループ設定を標準のものに変更（axey, handy などを削除/変更）
-	groups = {
-		choppy = 2,                    -- 斧で壊せる
-		oddly_breakable_by_hand = 2,  -- 素手で壊せる
---		attached_node = 1,            -- 上のブロックが壊れたら外れる
-		sign = 1,
-		hanging_sign = 1,
-	},
-	-- プレフィックスをこれまでに合わせた形式に変更
-	_mod_mcl_sign_type = "hanging",
-})
+local h_config_tpl   = json_config and json_config.hanging_template or {}
+local h_wall_config  = json_config and json_config.hanging_wall_template or {}
+local h_attach_config = json_config and json_config.hanging_attached_template or {}
 
-local sign_hanging_wall = table.merge(sign_tpl,{
-	mesh = "mcl_signs_sign_hanging_wall.obj",
-	tiles = { "mcl_signs_sign_hanging_wall.png" },
-	paramtype2 = "4dir",
-	use_texture_alpha = "clip",
-	walkable = true,
-	selection_box = {
-		type = "fixed",
-		fixed = {
-			{
-				-0.4375,				-0.5,				-0.0625,
-				0.4375,				0.125,				0.0625,
-			},
-			{
-				-0.5,				0.375,				-0.125,
-				0.5,				0.5,				0.125,
-			},
-		},
-	},
-	collision_box = {
-		type = "fixed",
-		fixed = {
-			{
-				-0.5,				0.375,				-0.125,
-				0.5,				0.5,				0.125,
-			},
-		},
-	},
-	-- グループ設定を標準のものに変更（axey, handy を削除/変更。attached_node を追加）
-	groups = {
-		choppy = 2,                    -- 斧で壊せる
-		oddly_breakable_by_hand = 2,  -- 素手で壊せる
---		attached_node = 1,            -- 設置先の壁が壊れたら外れる
-		sign = 1,
-		hanging_sign = 1,
-		not_in_creative_inventory = 1, -- クリエイティブインベントリには表示しない（設置用アイテムが別にあるため）
-	},
-	-- プレフィックスをこれまでに合わせた形式に変更
-	_mod_mcl_sign_type = "hanging",
-})
-
-local sign_hanging_attached = table.merge (sign_tpl, {
-	mesh = "mcl_signs_sign_hanging_attached.obj",
-	tiles = { "mcl_signs_sign_hanging_wall.png" },
-	paramtype2 = "degrotate",
-	use_texture_alpha = "clip",
-	selection_box = {
-		type = "fixed",
-		fixed = {
-			{
-				-0.4375,				-0.5,				-0.4375,
-				0.4375,				0.125,				0.4375,
-			},
-		},
-	},
-	-- グループ設定を標準のものに変更（axey, handy を削除/変更）
-	groups = {
-		choppy = 2,                    -- 斧で壊せる
-		oddly_breakable_by_hand = 2,  -- 素手で壊せる
---		attached_node = 1,            -- 上のブロックが壊れたら外れる
-		sign = 1,
-		hanging_sign = 1,
-		not_in_creative_inventory = 1, -- クリエイティブインベントリには表示しない
-	},
-})
+local sign_hanging          = table.merge(sign_tpl, h_config_tpl)
+local sign_hanging_wall     = table.merge(sign_tpl, h_wall_config)
+local sign_hanging_attached = table.merge(sign_tpl, h_attach_config)
 
 -- 関数名を mod_mcl_signs に修正
 function mod_mcl_signs.register_hanging_sign (name, def)
@@ -864,11 +787,11 @@ function mod_mcl_signs.register_hanging_sign (name, def)
 		description = S("Hanging " .. title_name .. " Sign"),
 		inventory_image = "mcl_signs_hanging_sign_" .. name .. "_item.png",
 		wield_image = "mcl_signs_hanging_sign_" .. name .. "_item.png",
-		drop = "mcl_signs:hanging_sign_" .. name,
+		drop = "mod_mcl_signs:hanging_sign_" .. name,
 		
 		-- 設置処理 (on_place) の互換性のために両方の変数を保持
 		_mod_mcl_sign_wood = name,
-		_mcl_sign_wood = name,
+--		_mcl_sign_wood = name,
 	}
 	core.register_node(":mod_mcl_signs:hanging_sign_"..name,table.merge(sign_hanging, newfields, {
 		tiles = {
