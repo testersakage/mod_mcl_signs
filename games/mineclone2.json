@@ -4,6 +4,12 @@
   "game_title": "VoxeLibre / MineClone2",
   "game_ver": "0.91.2",
 
+  "legacy_hooks": {
+    "mod_name": "mcl_signs",
+    "functions": ["update_sign", "update_text", "update"],
+    "lbm_name": "mcl_signs:restore_entities"
+  },
+
   "sound_mod": "mcl_sounds",
   "sound_obj": "node_sound_wood_defaults",
 
@@ -57,6 +63,30 @@
     { "name": "warped", "color": "#086b56" }
   ],
 
+  "node_template": {
+    "locale": {
+      "_tt_help": "Can be written",
+      "_doc_items_longdesc": "Signs can be written and come in two variants: Wall sign and sign on a sign post. Signs can be placed on the top and the sides of other blocks, but not below them.",
+      "_doc_items_usagehelp": "After placing the sign, you can write something on it. You have @1 lines of text with up to @2 characters for each line; anything beyond these limits is lost. Not all characters are supported. The text can be changed after it's written by rightclicking the sign. Can be colored and made to glow. Use bone meal to remove color and glow."
+    },
+    "use_texture_alpha": "opaque",
+    "sunlight_propagates": true,
+    "walkable": false,
+    "is_ground_content": false,
+    "paramtype2": "degrotate",
+    "drawtype": "mesh",
+    "mesh": "mcl_signs_sign.obj",
+    "paramtype": "light",
+    "selection_box": {
+      "type": "fixed",
+      "fixed": [-0.2, -0.5, -0.2, 0.2, 0.5, 0.2]
+    },
+    "groups": { "axey": 1, "handy": 2, "sign": 1, "supported_node": 1, "breaking_cactus": 1 },
+    "stack_max": 16,
+    "node_placement_prediction": "",
+    "on_rotate": false,
+    "_mod_mcl_sign_type": "standing2",
+  },
   "wall_template": {
     "mesh": "mcl_signs_signonwallmount.obj",
     "paramtype2": "wallmounted",

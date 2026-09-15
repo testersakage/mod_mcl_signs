@@ -22,6 +22,25 @@
     { "name": "iron", "color": "#AAAAAA" }
   ],
 
+  "node_template": {
+    "use_texture_alpha": "opaque",
+    "sunlight_propagates": true,
+    "walkable": false,
+    "is_ground_content": false,
+    "paramtype2": "degrotate",
+    "drawtype": "mesh",
+    "mesh": "mcl_signs_sign.obj",
+    "paramtype": "light",
+    "selection_box": {
+      "type": "fixed",
+      "fixed": [-0.2, -0.5, -0.2, 0.2, 0.5, 0.2]
+    },
+    "groups": { "choppy": 2, "oddly_breakable_by_hand": 2, "sign": 1 },
+    "stack_max": 16,
+    "node_placement_prediction": "",
+    "on_rotate": false,
+    "_mod_mcl_sign_type": "standing",
+  },
   "wall_template": {
     "mesh": "mcl_signs_signonwallmount.obj",
     "paramtype2": "wallmounted",

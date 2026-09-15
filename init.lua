@@ -7,7 +7,10 @@ local modname = core.get_current_modname()
 local S = core.get_translator(modname)
 local modpath = core.get_modpath(modname)
 
+local Arbitrator = _G.SignArbitrator or dofile(modpath .. "/arbitrator.lua") -- 調停
 local Env        = _G.SignEnv        or dofile(modpath .. "/env.lua") -- 調査
+
+mod_mcl_signs.Arbitrator = Arbitrator
 
 -- SignEnv の判定結果に基づき JSON パスを決定
 local json_filename = Env.game_id .. ".json"
@@ -36,6 +39,30 @@ if not json_config or type(json_config) ~= "table" then
 	return
 end
 
+-- 調停エンジンにmodを登録
+mod_mcl_signs.Arbitrator.register_engine("mod_mcl_signs", {
+	entity_name = "mod_mcl_signs:text",
+	on_restore = function(pos, node, sign_id)
+		-- 登録された瞬間に、描画関数をキック
+		core.after(0, function()
+			mod_mcl_signs.update_sign(pos)
+		end)
+	end
+})
+
+if json_config and json_config.legacy_hooks then
+	-- arbitrator.lua 抽象化フック実行エンジンをキック
+	mod_mcl_signs.Arbitrator.apply_system_arbitration(json_config.legacy_hooks)
+end
+
+-- コピーした独自UTF-8ライブラリ (utf8.lua) を安全に読み込む
+local utf8 = dofile(modpath .. "/utf8.lua")
+
+-- 万が一読み込めなかった場合や、ファイルがテーブルを返さなかった場合のフォールバック対策
+if type(utf8) ~= "table" then
+	utf8 = _G.utf8 or {}
+end
+
 -- table.merge が存在しない場合のフォールバック定義
 if not table.merge then
 	table.merge = function(t1, t2, t3, t4)
@@ -46,16 +73,6 @@ if not table.merge then
 		if t4 then			for k, v in pairs(t4) do result[k] = v end		end
 		return result
 	end
-end
-
--- =================================================================
--- コピーした独自UTF-8ライブラリ (utf8.lua) を安全に読み込む
--- =================================================================
-local utf8 = dofile(modpath .. "/utf8.lua")
-
--- 万が一読み込めなかった場合や、ファイルがテーブルを返さなかった場合のフォールバック対策
-if type(utf8) ~= "table" then
-	utf8 = _G.utf8 or {}
 end
 
 dofile(modpath .. "/font_pipeline.lua") -- 追加
@@ -117,44 +134,23 @@ local DEFAULT_COLOR = "#000000"
 local F = core.formspec_escape
 
 -- Template definition
-local sign_tpl = {
-	-- 独自のヘルプ定義（MinecloniaのTooltips/Documentation用なので不要なら削除可能、残しても害はありません）
-	_tt_help = S("Can be written"),
-	_doc_items_longdesc = S("Signs can be written and come in two variants: Wall sign and sign on a sign post. Signs can be placed on the top and the sides of other blocks, but not below them."),
-	_doc_items_usagehelp = S("After placing the sign, you can write something on it. You have @1 lines of text with up to @2 characters for each line; anything beyond these limits is lost. Not all characters are supported. The text can be changed after it's written by rightclicking the sign. Can be colored and made to glow. Use bone meal to remove color and glow.", NUMBER_OF_LINES, LINE_LENGTH),
-	
-	-- Luanti 5.x 互換の透過設定
-	use_texture_alpha = "opaque",
-	sunlight_propagates = true,
-	walkable = false,
-	is_ground_content = false,
-	paramtype2 = "degrotate",
-	drawtype = "mesh",
-	mesh = "mcl_signs_sign.obj",
-	paramtype = "light",
-	selection_box = {
-		type = "fixed",
-		fixed = {-0.2, -0.5, -0.2, 0.2, 0.5, 0.2}
-	},
-	
-	-- グループ設定を標準のものに変更（axey, handy, breaking_cactus などを削除/変更）
-	groups = {
-		choppy = 2,                    -- 斧で壊せる
-		oddly_breakable_by_hand = 2,  -- 素手で壊せる
---		attached_node = 1,            -- 標準の設置物（下のブロックが壊れたら外れる）
-		sign = 1,
-	},
-	stack_max = 16,
-	
-	-- サウンドを標準の木に変更
---	sounds = default.node_sound_wood_defaults(),
-	
-	node_placement_prediction = "",
-	on_rotate = false,
-	
-	-- MOD独自の管理用データ（mcl_ プレフィックスをフォルダ名に変更）
-	_mod_mcl_sign_type = "standing"
-}
+local sign_config_tpl = json_config and json_config.node_template or {}
+local sign_tpl = table.copy(sign_config_tpl)
+
+if sign_tpl.locale and type(sign_tpl.locale) == "table" then
+	for key, raw_text in pairs(sign_tpl.locale) do
+		if type(raw_text) == "string" then
+			local args = raw_text:find("@") and { NUMBER_OF_LINES or 4, LINE_LENGTH or 15 } or {}
+			sign_tpl[key] = S(raw_text, unpack(args))
+			if key == "_tt_help" then
+				local col_gray = "\x1b(c@#7f7f7f)"
+				local col_reset = "\x1b(c@R)"
+--				sign_tpl[key] = sign_tpl[key] .. "\n" .. col_gray .. "[Extra System]\n" .. col_gray .. "  Font Atlas Render\n" .. col_gray .. "  Arbitrator Sign" .. col_reset
+			end
+		end
+	end
+	sign_tpl.locale = nil -- データ清掃
+end
 
 -- 追加設定（サウンド）
 if _G[json_config.sound_mod] and _G[json_config.sound_mod][json_config.sound_obj] then
@@ -163,7 +159,9 @@ else
     sign_tpl.sounds = {}
 end
 -- 追加設定（ツールチップ）
-sign_tpl._tt_help = sign_tpl._tt_help .. "\n+Font Atlas Render"
+if sign_tpl._tt_help then
+	sign_tpl._tt_help = sign_tpl._tt_help .. "\n+Signboard Arbitrator\n+Font Atlas Renderer"
+end
 
 -- Signs data / meta
 local function normalize_rotation(rot)
@@ -424,6 +422,14 @@ function mod_mcl_signs.update_sign(pos)
 		if not text_entity or not text_entity:get_pos() then return end
 	end
 
+	-- 文字エンティティへ、ノードの sign_id を1対1で保存
+	local current_sign_id = mod_mcl_signs.Arbitrator.get_or_create_sign_id(pos)
+	
+	local ent = text_entity:get_luaentity()
+	if ent then
+		ent.sign_id = current_sign_id
+	end
+
 	text_entity:set_properties({
 		textures = {generate_texture(data)},
 		-- SIGN_GLOW_INTENSITY が未定義でエラーが出る場合は 14 に置き換えてください
@@ -434,15 +440,6 @@ function mod_mcl_signs.update_sign(pos)
 	return true
 end
 
-core.register_lbm({
-	name = "mod_mcl_signs:restore_entities",
-	nodenames = {"group:sign"},
-	label = "Restore sign text",
-	run_at_every_load = true,
-	-- 関数名を mod_mcl_signs に修正
-	action = mod_mcl_signs.update_sign,
-})
-
 -- Text entity definition
 core.register_entity("mod_mcl_signs:text", {
 	initial_properties = {
@@ -451,13 +448,29 @@ core.register_entity("mod_mcl_signs:text", {
 		physical = false,
 		collide_with_objects = false,
 	},
-	on_activate = function(self)
-		local pos = self.object:get_pos()
-		-- 関数名を mod_mcl_signs に修正
-		mod_mcl_signs.update_sign(pos)
+	
+	-- 自己スキャンして不整合があれば、その場で自発的に消滅。
+	on_activate = function(self, staticdata, dtime)
+		-- 1. セーブデータ（staticdata）から、過去に保存されていた sign_id の復元を試みる
+		if staticdata and staticdata ~= "" then
+			local s_data = core.deserialize(staticdata)
+			if type(s_data) == "table" and s_data.sign_id then
+				self.sign_id = s_data.sign_id
+			end
+		end
+
+		-- 2. テクスチャの生存指紋チェック
 		local props = self.object:get_properties()
 		local t = props and props.textures
-		if type(t) ~= "table" or #t == 0 then self.object:remove() end
+		if type(t) ~= "table" or #t == 0 then 
+			self.object:remove() 
+			return
+		end
+	end,
+
+	-- サーバーが保存される瞬間に、自分の sign_id をセーブ
+	get_staticdata = function(self)
+		return core.serialize({ sign_id = self.sign_id })
 	end,
 })
 
@@ -751,7 +764,7 @@ function mod_mcl_signs.register_sign(name, color, def)
 		inventory_image = colored_texture("mcl_signs_default_sign_greyscale.png", color),
 		wield_image = colored_texture("mcl_signs_default_sign_greyscale.png", color),
 		
-		-- ★ 重要: 破壊時にドロップするアイテムを「立て看板 (standing_sign)」に統一
+		-- 重要: 破壊時にドロップするアイテムを「立て看板 (standing_sign)」に統一
 		drop = "mod_mcl_signs:standing_sign_"..name,
 		
 		_mod_mcl_sign_wood = name,
@@ -760,15 +773,27 @@ function mod_mcl_signs.register_sign(name, color, def)
 
 	def = def or {}
 	
-	-- 2. 立て看板 (Standing Sign) の登録（インベントリに表示する）
-	core.register_node(":mod_mcl_signs:standing_sign_"..name, table.merge(sign_tpl, newfields, def))
+	-- 2. 立て看板 (Standing Sign) の登録
+	-- 【調停インフラのドッキング】：
+	-- core.register_node を捨て、 Arbitrator ヘルパーへパスを回す
+	-- これにより、設置時（on_construct）にノードへの 'sign_id' メタデータの刻印が100%確定
+	local node_name_standing = ":mod_mcl_signs:standing_sign_" .. name
+	local node_def_standing = table.merge(sign_tpl, newfields, def)
+	
+	mod_mcl_signs.Arbitrator.register_sign_node(node_name_standing, "mod_mcl_signs", node_def_standing)
+	
 	
 	-- 3. 壁掛け看板 (Wall Sign) の登録
 	-- 壁掛け用のテーブルをマージしつつ、インベントリ非表示グループを強制追加
 	local wall_fields = table.merge(newfields, {
 		groups = table.merge(sign_wall.groups, { not_in_creative_inventory = 1 })
 	})
-	core.register_node(":mod_mcl_signs:wall_sign_"..name, table.merge(sign_wall, wall_fields, def))
+	
+	local node_name_wall = ":mod_mcl_signs:wall_sign_" .. name
+	local node_def_wall = table.merge(sign_wall, wall_fields, def)
+	
+	-- 壁掛け側も、 Arbitrator ヘルパーでインド
+	mod_mcl_signs.Arbitrator.register_sign_node(node_name_wall, "mod_mcl_signs", node_def_wall)
 end
 
 local h_config_tpl   = json_config and json_config.hanging_template or {}
@@ -787,27 +812,38 @@ function mod_mcl_signs.register_hanging_sign (name, def)
 		description = S("Hanging " .. title_name .. " Sign"),
 		inventory_image = "mcl_signs_hanging_sign_" .. name .. "_item.png",
 		wield_image = "mcl_signs_hanging_sign_" .. name .. "_item.png",
-		drop = "mod_mcl_signs:hanging_sign_" .. name,
+		drop = "mcl_signs:hanging_sign_" .. name,
 		
 		-- 設置処理 (on_place) の互換性のために両方の変数を保持
 		_mod_mcl_sign_wood = name,
 --		_mcl_sign_wood = name,
 	}
-	core.register_node(":mod_mcl_signs:hanging_sign_"..name,table.merge(sign_hanging, newfields, {
-		tiles = {
-			"mcl_signs_hanging_sign_" .. name .. ".png",
-		},
-	}, def or {}))
-	core.register_node(":mod_mcl_signs:hanging_sign_wall_"..name,table.merge(sign_hanging_wall, newfields, {
-		tiles = {
-			"mcl_signs_hanging_sign_" .. name .. ".png",
-		},
-	}, def or {}))
-	core.register_node(":mod_mcl_signs:hanging_sign_attached_"..name,table.merge(sign_hanging_attached, newfields, {
-		tiles = {
-			"mcl_signs_hanging_sign_" .. name .. ".png",
-		},
-	}, def or {}))
+	
+	def = def or {}
+
+	-- 1. 通常の吊り下げ看板 (Hanging Sign) の登録
+	local node_name_normal = ":mod_mcl_signs:hanging_sign_" .. name
+	local node_def_normal = table.merge(sign_hanging, newfields, {
+		tiles = { "mcl_signs_hanging_sign_" .. name .. ".png" },
+	}, def)
+	-- 【調停インフラのドッキング】：core.register_node を Arbitrator ヘルパーへすげ替え！
+	mod_mcl_signs.Arbitrator.register_sign_node(node_name_normal, "mod_mcl_signs", node_def_normal)
+
+
+	-- 2. 壁掛けブラケット型吊り看板 (Hanging Sign Wall) の登録
+	local node_name_wall = ":mod_mcl_signs:hanging_sign_wall_" .. name
+	local node_def_wall = table.merge(sign_hanging_wall, newfields, {
+		tiles = { "mcl_signs_hanging_sign_" .. name .. ".png" },
+	}, def)
+	mod_mcl_signs.Arbitrator.register_sign_node(node_name_wall, "mod_mcl_signs", node_def_wall)
+
+
+	-- 3. フェンス・棒固定型吊り看板 (Hanging Sign Attached) の登録
+	local node_name_attached = ":mod_mcl_signs:hanging_sign_attached_" .. name
+	local node_def_attached = table.merge(sign_hanging_attached, newfields, {
+		tiles = { "mcl_signs_hanging_sign_" .. name .. ".png" },
+	}, def)
+	mod_mcl_signs.Arbitrator.register_sign_node(node_name_attached, "mod_mcl_signs", node_def_attached)
 end
 
 -- =================================================================
@@ -899,3 +935,15 @@ if json_config.crafts and type(json_config.crafts) == "table" then
 	end
 end
 
+core.register_lbm({
+	name = "mod_mcl_signs:arbitrator_restore",
+	nodenames = {"group:sign_arbitrated"}, --  register_sign_node で注入したグループ
+	label = "Sign Arbitrator Entity Restore Trigger",
+	run_at_every_load = true,
+	action = function(pos, node)
+		--  process_restore メインロジックをキック
+		if mod_mcl_signs.Arbitrator and mod_mcl_signs.Arbitrator.process_restore then
+			mod_mcl_signs.Arbitrator.process_restore(pos, node)
+		end
+	end,
+})
