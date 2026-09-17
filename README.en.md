@@ -13,6 +13,7 @@ This mod utilizes a font-atlas rendering method for text image generation.
 
 - **Consolidated Material Variations**: Smartly unifies sign variations into **"Wood"** and **"Iron"** when running under Minetest Game specifications.
 - **Dynamic Multi-Game Adaptation**: Built on a data-driven JSON architecture. It leverages `core.get_game_info()` to automatically detect the Game ID (`minetest`, `voxellibre`, etc.) and dynamically loads the corresponding configuration file.
+- **Arbitration System**: Coordinates and resolves conflicts with other signpost systems (mods).
 - **Smart Attachment Switching**: Automatically switches between a **standing sign** and a **wall-mounted sign** depending on where it is placed (floor vs. wall), unifying the inventory item into a single sleek stack.
 - **Mid-Air Hanging Signs**: Can be reliably placed on the side or bottom of floating blocks, fixing the vanilla bug where placing signs next to air blocks was blocked.
 - **Beautiful Text Rendering**: Embeds a highly compatible internal UTF-8 text processing library (`utf8.lua`) originating from Mineclonia, preventing text clipping, misalignment, and character corruption.
@@ -61,8 +62,9 @@ Navigate to Luanti's **Settings -> Content -> Mods -> Standalone mcl Signs** to 
 This mod automatically detects the running game environment and dynamically adjusts the inventory registration and crafting recipes as follows:
 
 - **VoxeLibre / MineClone2 Context (`mineclone2.json`)**:
-  Expands the signboard availability into **11 unique wood variations** (from Oak to Warped). It automatically purges the legacy, bugged signboard recipes from the base game and completely overwrites them with this newly fixed, robust signboard system.
+  Expands signboards into **11 total variations**, ranging from oak to warped wood. Automatically removes only the original legacy signboard recipes, restricting them to Creative Mode, while replacing them with the new signboard system in Survival Mode.
 - **Mineclonia Context (`mineclonia.json`)**:
+   Adds a `Iron` signboard as a sample.
   To prevent any registration conflicts (dual-registration anomalies) with the core game engine, this mod skips duplicated craft recipe injections. However, all freshly placed and pre-existing vanilla signs will be completely and seamlessly overridden by this mod's high-definition Atlas rendering infrastructure.
 - **Other Contexts & Minetest Game (`minetest.json`)**:
   In accordance with standard specifications, the materials are streamlined into just 2 types: "Wood" and "Iron" (utilizing `default:wood` and `default:steel_ingot`).
@@ -80,6 +82,7 @@ mod_mcl_signs/
 ├─ locale/             # English and Japanese translation files (PO/POT)
 ├─ models/             # Original 3D mesh assets (.obj)
 ├─ textures/           # Textures for wood/iron signs and custom font sheets
+├─ arbitrator.lua      # Arbitration system
 ├─ atlas_sample.tsv    # Sample .tsv file
 ├─ env.lua             # Environment check
 ├─ font_pipeline.lua   # Font Atlas Engine

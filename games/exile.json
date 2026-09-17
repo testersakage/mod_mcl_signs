@@ -4,6 +4,9 @@
   "game_title": "Exile Survival Game",
   "game_ver": "2026-09-05",
 
+  "sound_mod": "nodes_nature",
+  "sound_obj": "node_sound_wood_defaults",
+
   "sign_dye_code": {
     "ncrafting:dye_red": "710e13",
     "ncrafting:dye_crimson": "5d2007",
@@ -100,35 +103,31 @@
 
   "crafts": [
     {
-      "output": "mod_mcl_signs:standing_sign_wood 3",
+      "output": "mod_mcl_signs:standing_sign_wood 1",
       "recipe": [
-        ["", "nodes_nature:amma_log", ""],
-        ["", "nodes_nature:amma_log", ""],
-        ["", "tech:stick", ""]
+        ["group:log"],
+        ["tech:stick"]
       ]
     },
     {
-      "output": "mod_mcl_signs:standing_sign_iron 3",
+      "output": "mod_mcl_signs:standing_sign_iron 1",
       "recipe": [
-        ["", "tech:iron_ingot", ""],
-        ["", "tech:iron_ingot", ""],
-        ["", "tech:stick", ""]
+        ["tech:iron_ingot"],
+        ["tech:stick"]
       ]
     },
     {
-      "output": "mod_mcl_signs:hanging_sign_wood 2",
+      "output": "mod_mcl_signs:hanging_sign_wood 1",
       "recipe": [
-        ["", "tech:stick", ""],
-        ["", "nodes_nature:amma_log", ""],
-        ["", "nodes_nature:amma_log", ""]
+        ["tech:stick"],
+        ["group:log"]
       ]
     },
     {
-      "output": "mod_mcl_signs:hanging_sign_iron 2",
+      "output": "mod_mcl_signs:hanging_sign_iron 1",
       "recipe": [
-        ["", "tech:stick", ""],
-        ["", "tech:iron_ingot", ""],
-        ["", "tech:iron_ingot", ""]
+        ["tech:stick"],
+        ["tech:iron_ingot"]
       ]
     }
   ]
