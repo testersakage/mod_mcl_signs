@@ -13,7 +13,7 @@ This mod utilizes a font-atlas rendering method for text image generation.
 
 - **Consolidated Material Variations**: Smartly unifies sign variations into **"Wood"** and **"Iron"** when running under Minetest Game specifications.
 - **Dynamic Multi-Game Adaptation**: Built on a data-driven JSON architecture. It leverages `core.get_game_info()` to automatically detect the Game ID (`minetest`, `voxellibre`, etc.) and dynamically loads the corresponding configuration file.
-- **Arbitration System**: Coordinates and resolves conflicts with other signpost systems (mods).
+- **Arbitration System**: Coordinates and resolves conflicts with other signboard systems (mods).
 - **Smart Attachment Switching**: Automatically switches between a **standing sign** and a **wall-mounted sign** depending on where it is placed (floor vs. wall), unifying the inventory item into a single sleek stack.
 - **Mid-Air Hanging Signs**: Can be reliably placed on the side or bottom of floating blocks, fixing the vanilla bug where placing signs next to air blocks was blocked.
 - **Beautiful Text Rendering**: Embeds a highly compatible internal UTF-8 text processing library (`utf8.lua`) originating from Mineclonia, preventing text clipping, misalignment, and character corruption.
